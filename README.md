@@ -402,6 +402,23 @@ it*; normalising first would change what the patterns see.
 
 `serde_json` and `regex` appear only as dev-dependencies, as benchmark baselines.
 
+## Using it as a tool
+
+This crate is an engine, not a program. If you want the program:
+
+**[`blazingly-aasa-mcp`](https://github.com/sergii-ziborov/blazingly-aasa-mcp)** — an MCP server
+and CLI built on it. It fetches a domain's file, matches a URL, explains the decision, and compares
+what a site serves against what Apple's CDN is handing to devices:
+
+```bash
+cargo install --git https://github.com/sergii-ziborov/blazingly-aasa-mcp
+blazingly-aasa check example.com "https://example.com/buy/42" --app ABCDE12345.com.example.app
+```
+
+The split is deliberate: everything network-shaped lives there, and this crate keeps two
+dependencies and compiles to WebAssembly. See
+[docs/aasadiff-integration.md](docs/aasadiff-integration.md) for where the line sits.
+
 ## Documentation
 
 | | |

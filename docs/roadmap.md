@@ -67,8 +67,12 @@ change. Those should be separate.
 
 ## 2. Is an MCP server needed?
 
-**Not in this crate, and not yet at all. When it happens, it belongs in a separate binary built on
-`mcport` — and only once there is a fetching layer to give it something worth exposing.**
+**Not in this crate. As a separate binary, yes — and it now exists:
+[`blazingly-aasa-mcp`](https://github.com/sergii-ziborov/blazingly-aasa-mcp).**
+
+The reasoning below is what the answer was before it was built. It is kept because the conclusion
+it reached is the shape the thing actually took, and because the boundary it argued for is the one
+that has to keep holding.
 
 ### Why not now
 
@@ -122,10 +126,25 @@ Two things it must not do, which follow directly from what this crate refuses to
 - **Never let fetch logic leak downward.** If the MCP server wants a cache or a retry policy, that
   lives in the MCP server.
 
-### Verdict
+### What was built
 
-Worth building once someone actually debugs universal links often enough to want it. Not worth
-building speculatively, and not worth putting in this crate under any circumstances.
+`blazingly-aasa-mcp` — a separate repository, a separate release cadence, and a dependency arrow
+that points one way. It exposes five tools, three of which reach the network and two of which do
+not, with `compare_origin_and_cdn` as the one that finds the hard bug.
+
+Two things it does that this crate could not have:
+
+- It never follows a redirect, because Apple requires the file to be served without one, so
+  following it would hide the misconfiguration the tool exists to find. That is a *transport*
+  opinion, and it belongs where the transport is.
+- The caller names a domain, never a URL, and IP literals, `localhost`, `.local`, and unqualified
+  names are refused before a socket opens. A semantics crate has no business having a view on
+  that, and a networked tool has no business not having one.
+
+The boundary held. `blazingly-aasa` gained nothing network-shaped: the MCP crate depends on it,
+pinned to a revision, and the arrow has stayed one-directional. Both statements in "Two things it
+must not do" above are still true of the built thing — it reports what the served file permits, and
+its fetch logic did not leak downward.
 
 ---
 

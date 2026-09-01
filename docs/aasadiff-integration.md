@@ -3,6 +3,10 @@
 `blazingly-aasa` is a semantic engine. It takes bytes and explicit context and tells you what the
 document says. It has no idea where the bytes came from, and that is deliberate.
 
+[`blazingly-aasa-mcp`](https://github.com/sergii-ziborov/blazingly-aasa-mcp) is the worked example
+of everything below: it owns the HTTPS client, the MCP protocol, and the presentation, and depends
+on this crate for every semantic answer.
+
 ## The boundary
 
 | This crate owns | A tool built on it owns |
