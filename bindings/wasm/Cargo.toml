@@ -1,0 +1,33 @@
+[package]
+name = "blazingly-aasa-wasm"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.78"
+license = "MIT"
+description = "WebAssembly bindings for blazingly-aasa"
+repository = "https://github.com/sergii-ziborov/blazingly-aasa"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+blazingly-aasa = { path = "../..", version = "0.1.0" }
+blazingly-json = "0.1.5"
+serde = { version = "1.0.229", features = ["derive"] }
+serde-wasm-bindgen = "0.6"
+wasm-bindgen = "0.2"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
+
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-Oz", "--enable-bulk-memory"]

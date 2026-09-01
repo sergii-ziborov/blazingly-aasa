@@ -1,0 +1,79 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>blazingly-aasa browser test</title>
+<style>
+  body { font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; padding: 2rem; }
+  .ok { color: #0a7d32; } .fail { color: #b3261e; } h1 { font-size: 1rem; }
+  pre { background: #f4f4f5; padding: 1rem; overflow-x: auto; }
+</style>
+<h1>blazingly-aasa — browser (pkg-web)</h1>
+<div id="out">running…</div>
+<script type="module">
+// Verifies the `web` target loads and behaves identically to Node, so the browser path is not
+// assumed to work just because Node's does.
+import init, { Aasa, matchPattern, isoTableSource } from "../pkg-web/blazingly_aasa.js";
+
+const out = document.getElementById("out");
+const lines = [];
+let failed = 0;
+const test = (name, body) => {
+  try { body(); lines.push(`<div class="ok">ok   ${name}</div>`); }
+  catch (e) { failed += 1; lines.push(`<div class="fail">FAIL ${name}: ${e.message}</div>`); }
+};
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+
+await init();
+
+const doc = new TextEncoder().encode(JSON.stringify({
+  applinks: { details: [{
+    appIDs: ["ABCDE12345.com.example.app"],
+    components: [
+      { "#": "no_universal_links", exclude: true },
+      { "/": "/buy/*" },
+      { "/": "/help/*", "?": { articleNumber: "????" } },
+    ],
+  }] },
+}));
+
+const APP = "ABCDE12345.com.example.app";
+const aasa = Aasa.compile(doc, "example.com");
+
+test("decides", () => {
+  assert(aasa.decide(APP, "https://example.com/buy/42") === "match", "buy");
+  assert(aasa.decide(APP, "https://example.com/buy/42#no_universal_links") === "exclude", "exclude");
+  assert(aasa.decide(APP, "https://example.com/help/1?articleNumber=481") === "no_match", "short");
+});
+test("batches over one string", () => {
+  const codes = aasa.decideLines(APP, [
+    "https://example.com/buy/1",
+    "https://example.com/nope",
+    "https://example.com/buy/2#no_universal_links",
+    "not a url",
+  ].join("\n"));
+  assert(codes.join(",") === "1,0,2,3", `got ${codes.join(",")}`);
+});
+test("traces", () => {
+  const r = aasa.match(APP, "https://example.com/help/1?articleNumber=4815");
+  assert(r.decision === "match", "decision");
+  assert(r.trace.selected_rule === 2, `rule ${r.trace.selected_rule}`);
+});
+test("explains", () => {
+  assert(aasa.explain(APP, "https://example.com/zzz").includes("NO_MATCH"), "explain");
+});
+test("validates", () => {
+  assert(Array.isArray(aasa.validate()), "diagnostics array");
+  assert(aasa.hasErrors() === false, "clean document");
+});
+test("matches standalone patterns", () => {
+  assert(matchPattern("/id/$(digit)$(digit)", "/id/42", true) === true, "digits");
+  assert(matchPattern("/id/$(digit)", "/id/x", true) === false, "not a digit");
+});
+test("reports the ISO table source", () => {
+  assert(/Foundation/.test(isoTableSource()), isoTableSource());
+});
+aasa.free();
+
+lines.push(`<hr><div class="${failed ? "fail" : "ok"}">${failed ? failed + " FAILED" : "all passed"}</div>`);
+out.innerHTML = lines.join("");
+document.title = failed ? "FAILED" : "PASSED";
+</script>

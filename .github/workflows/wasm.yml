@@ -1,0 +1,56 @@
+name: WebAssembly
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - uses: jetli/wasm-pack-action@v0.4.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: oven-sh/setup-bun@v2
+
+      - name: The core crate must build for wasm32 on its own
+        run: cargo check -p blazingly-aasa --target wasm32-unknown-unknown
+
+      - run: cargo clippy -p blazingly-aasa-wasm --target wasm32-unknown-unknown -- -D warnings
+
+      - name: Build the npm packages
+        run: ./bindings/wasm/build.sh
+
+      - name: Node
+        run: node bindings/wasm/tests/node.test.mjs
+
+      - name: Bun
+        run: bun bindings/wasm/tests/node.test.mjs
+
+      - name: Report payload size
+        run: |
+          wasm=$(find bindings/wasm/pkg -name '*.wasm')
+          raw=$(wc -c < "$wasm")
+          gz=$(gzip -9 -c "$wasm" | wc -c)
+          echo "### WebAssembly payload" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| form | bytes |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| --- | --- |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| raw | $raw |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| gzip | $gz |" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: blazingly-aasa-wasm
+          path: bindings/wasm/pkg*/

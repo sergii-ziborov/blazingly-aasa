@@ -1,3 +1,6 @@
+[workspace]
+members = ["bindings/wasm"]
+
 [package]
 name = "blazingly-aasa"
 version = "0.1.0"

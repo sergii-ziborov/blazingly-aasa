@@ -1,0 +1,32 @@
+# Differential checks against Apple's own swcutil.
+#
+# This is deliberately manual. swcutil requires root, GitHub's macOS runners are not a stable
+# reference for Apple's evolving behaviour, and a semantic engine should not have its main CI
+# gated on a tool that can change between OS point releases. Run it when touching matching
+# semantics, then promote whatever it settles into tests/fixtures with a note in docs/parity.md.
+name: Apple oracle
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 1 * *"
+
+permissions:
+  contents: read
+
+jobs:
+  swcutil:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Regenerate the ISO tables and check for drift
+        run: |
+          swift scripts/generate_iso_tables.swift > /tmp/iso_tables.rs
+          if ! diff -q src/iso_tables.rs /tmp/iso_tables.rs; then
+            echo "::warning::Foundation's isoRegionCodes/isoLanguageCodes have changed on this runner."
+            diff src/iso_tables.rs /tmp/iso_tables.rs | head -40 || true
+          fi
+      - name: Differential run against swcutil
+        run: sudo ./scripts/oracle_swcutil.sh || true

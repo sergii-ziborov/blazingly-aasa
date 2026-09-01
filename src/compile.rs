@@ -213,6 +213,8 @@ pub struct CompiledAasa {
     /// Whether any rule turns `percentEncoded` off. When nothing does, matching never pays for
     /// percent-decoding the URL.
     pub(crate) needs_decoded: bool,
+    /// Whether any rule uses a `?` dictionary. When none does, the query is never split into items.
+    pub(crate) needs_query_items: bool,
 }
 
 impl CompiledAasa {
@@ -367,6 +369,10 @@ pub(crate) fn compile(document: &AasaDocument) -> CompiledAasa {
         .iter()
         .flat_map(|detail| detail.rules.iter())
         .any(|rule| !rule.effective.percent_encoded);
+    let needs_query_items = details
+        .iter()
+        .flat_map(|detail| detail.rules.iter())
+        .any(|rule| matches!(rule.query, Some(CompiledQuery::Items(_))));
 
     CompiledAasa {
         document: document.clone(),
@@ -378,6 +384,7 @@ pub(crate) fn compile(document: &AasaDocument) -> CompiledAasa {
         substitution_variables,
         compile_diagnostics: diagnostics,
         needs_decoded,
+        needs_query_items,
     }
 }
 

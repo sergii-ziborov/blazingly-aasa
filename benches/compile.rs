@@ -39,7 +39,7 @@ fn parse_and_compile(criterion: &mut Criterion) {
             BenchmarkId::new("blazingly-aasa/parse-only", name),
             &bytes,
             |bencher, bytes| {
-                bencher.iter(|| black_box(AasaDocument::parse(black_box(bytes)).unwrap()))
+                bencher.iter(|| black_box(AasaDocument::parse(black_box(bytes)).unwrap()));
             },
         );
     }

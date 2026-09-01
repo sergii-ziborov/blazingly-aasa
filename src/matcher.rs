@@ -60,8 +60,13 @@ struct Inputs<'a> {
 }
 
 impl<'a> Inputs<'a> {
-    fn new(parts: &'a UrlParts, needs_decoded: bool) -> Self {
-        let items = parts.query_items();
+    fn new(parts: &UrlParts<'a>, needs_decoded: bool, needs_items: bool) -> Self {
+        // A document that never uses a `?` dictionary never needs the query split at all.
+        let items = if needs_items {
+            parts.query_items()
+        } else {
+            Vec::new()
+        };
         let decoded = needs_decoded.then(|| Decoded {
             path: percent_decode(parts.path()),
             query: percent_decode(parts.query()),
@@ -115,7 +120,7 @@ enum Preflight {
     Stop(StopReason),
 }
 
-fn preflight(aasa: &CompiledAasa, domain: &str, parts: &UrlParts) -> Preflight {
+fn preflight(aasa: &CompiledAasa, domain: &str, parts: &UrlParts<'_>) -> Preflight {
     if !domain.is_empty() && !domain.eq_ignore_ascii_case(parts.host()) {
         return Preflight::Stop(StopReason::HostMismatch {
             expected: domain.to_owned(),
@@ -128,7 +133,7 @@ fn preflight(aasa: &CompiledAasa, domain: &str, parts: &UrlParts) -> Preflight {
     Preflight::Proceed
 }
 
-fn context_notes(parts: &UrlParts) -> Vec<String> {
+fn context_notes(parts: &UrlParts<'_>) -> Vec<String> {
     let mut notes = Vec::new();
     if parts.scheme() != "https" {
         notes.push(format!(
@@ -164,11 +169,11 @@ impl CompiledAasa {
 
     /// The same decision, for a URL that has already been split.
     #[must_use]
-    pub fn decide_parts(&self, domain: &str, app_id: &str, parts: &UrlParts) -> MatchDecision {
+    pub fn decide_parts(&self, domain: &str, app_id: &str, parts: &UrlParts<'_>) -> MatchDecision {
         if let Preflight::Stop(_) = preflight(self, domain, parts) {
             return MatchDecision::NoMatch;
         }
-        let inputs = Inputs::new(parts, self.needs_decoded);
+        let inputs = Inputs::new(parts, self.needs_decoded, self.needs_query_items);
         for detail in &self.details {
             if !detail.applies_to(app_id) {
                 continue;
@@ -210,7 +215,7 @@ impl CompiledAasa {
         &self,
         domain: &str,
         app_id: &str,
-        parts: &UrlParts,
+        parts: &UrlParts<'_>,
         url_text: &str,
     ) -> MatchResult {
         let mut result = MatchResult {
@@ -233,7 +238,7 @@ impl CompiledAasa {
             return result;
         }
 
-        let inputs = Inputs::new(parts, self.needs_decoded);
+        let inputs = Inputs::new(parts, self.needs_decoded, self.needs_query_items);
         let mut any_applicable = false;
         let mut closest: Option<RuleTrace> = None;
 

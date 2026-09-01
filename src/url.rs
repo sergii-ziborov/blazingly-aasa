@@ -6,25 +6,39 @@
 //! RFC 3986 definition.
 
 use crate::error::UrlError;
+use std::borrow::Cow;
 
 /// The pieces of a URL that Associated Domains matching cares about.
+///
+/// Every component borrows from the input string. Only the scheme and host can allocate, and only
+/// when they actually contain uppercase letters — matching a URL should not cost six heap
+/// allocations.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct UrlParts {
-    scheme: String,
-    host: String,
-    port: Option<String>,
-    path: String,
-    query: String,
-    fragment: String,
+pub struct UrlParts<'a> {
+    scheme: Cow<'a, str>,
+    host: Cow<'a, str>,
+    port: Option<&'a str>,
+    path: &'a str,
+    query: &'a str,
+    fragment: &'a str,
 }
 
-impl UrlParts {
+/// Lowercases only when something is actually uppercase, which is rare in practice.
+fn ascii_lower(input: &str) -> Cow<'_, str> {
+    if input.bytes().any(|byte| byte.is_ascii_uppercase()) {
+        Cow::Owned(input.to_ascii_lowercase())
+    } else {
+        Cow::Borrowed(input)
+    }
+}
+
+impl<'a> UrlParts<'a> {
     /// Splits an absolute URL into its components.
     ///
     /// # Errors
     ///
     /// Returns [`UrlError`] when the input has no scheme, no `//` authority, or an empty host.
-    pub fn parse(input: &str) -> Result<Self, UrlError> {
+    pub fn parse(input: &'a str) -> Result<Self, UrlError> {
         let trimmed = input.trim();
         if trimmed.is_empty() {
             return Err(UrlError::new("URL is empty"));
@@ -65,27 +79,23 @@ impl UrlParts {
             return Err(UrlError::new("URL has an empty host"));
         }
 
-        let mut fragment = String::new();
+        let mut fragment = "";
         if let Some(index) = remainder.find('#') {
-            remainder[index + 1..].clone_into(&mut fragment);
+            fragment = &remainder[index + 1..];
             remainder = &remainder[..index];
         }
 
-        let mut query = String::new();
+        let mut query = "";
         if let Some(index) = remainder.find('?') {
-            remainder[index + 1..].clone_into(&mut query);
+            query = &remainder[index + 1..];
             remainder = &remainder[..index];
         }
 
-        let path = if remainder.is_empty() {
-            "/".to_owned()
-        } else {
-            remainder.to_owned()
-        };
+        let path = if remainder.is_empty() { "/" } else { remainder };
 
         Ok(Self {
-            scheme: scheme.to_ascii_lowercase(),
-            host: host.to_ascii_lowercase(),
+            scheme: ascii_lower(scheme),
+            host: ascii_lower(host),
             port,
             path,
             query,
@@ -107,33 +117,33 @@ impl UrlParts {
 
     /// The explicit port, if the URL carried one.
     #[must_use]
-    pub fn port(&self) -> Option<&str> {
-        self.port.as_deref()
+    pub fn port(&self) -> Option<&'a str> {
+        self.port
     }
 
     /// The path exactly as written, always starting with `/`.
     #[must_use]
-    pub fn path(&self) -> &str {
-        &self.path
+    pub fn path(&self) -> &'a str {
+        self.path
     }
 
     /// The query exactly as written, without the leading `?`. Empty when absent.
     #[must_use]
-    pub fn query(&self) -> &str {
-        &self.query
+    pub fn query(&self) -> &'a str {
+        self.query
     }
 
     /// The fragment exactly as written, without the leading `#`. Empty when absent.
     #[must_use]
-    pub fn fragment(&self) -> &str {
-        &self.fragment
+    pub fn fragment(&self) -> &'a str {
+        self.fragment
     }
 
     /// The query split into `(name, value)` pairs, in source order.
     ///
     /// An item without `=` yields an empty value, matching how `a=1&flag&b=2` is usually read.
     #[must_use]
-    pub fn query_items(&self) -> Vec<(&str, &str)> {
+    pub fn query_items(&self) -> Vec<(&'a str, &'a str)> {
         if self.query.is_empty() {
             return Vec::new();
         }
@@ -145,18 +155,18 @@ impl UrlParts {
     }
 }
 
-fn split_host_port(host_port: &str) -> Result<(&str, Option<String>), UrlError> {
+fn split_host_port(host_port: &str) -> Result<(&str, Option<&str>), UrlError> {
     if let Some(end) = host_port.strip_prefix('[').and_then(|rest| rest.find(']')) {
         let host = &host_port[..=end + 1];
         let tail = &host_port[end + 2..];
         return match tail.strip_prefix(':') {
-            Some(port) => Ok((host, Some(port.to_owned()))),
+            Some(port) => Ok((host, Some(port))),
             None if tail.is_empty() => Ok((host, None)),
             None => Err(UrlError::new("malformed IPv6 authority")),
         };
     }
     match host_port.rsplit_once(':') {
-        Some((host, port)) => Ok((host, Some(port.to_owned()))),
+        Some((host, port)) => Ok((host, Some(port))),
         None => Ok((host_port, None)),
     }
 }

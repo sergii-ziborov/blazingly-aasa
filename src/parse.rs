@@ -274,7 +274,7 @@ impl Walker {
                 }
                 Value::Null => {}
                 other => {
-                    self.mismatch(|| details_path.clone(), "an array of detail objects", other)
+                    self.mismatch(|| details_path.clone(), "an array of detail objects", other);
                 }
             }
         }
