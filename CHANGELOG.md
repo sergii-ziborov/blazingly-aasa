@@ -3,6 +3,40 @@
 All notable changes to this project are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+Read the published source of every AASA tool with real usage (`chayev/yurl`,
+`shortstuffsushi/Universal-Link-Validator`, `st-tech/universal-links-test`,
+`@linkforty/aasa-core`) and closed the three gaps where a competitor did something this crate did
+not. `docs/competitors.md` is the full matrix; `tests/coverage.rs` is its executable half.
+
+- `apps_for_url` / `apps_for_url_parts`: which apps a URL reaches, in one pass over the rules
+  rather than one scan per app. `universal-links-test` answers this and this crate did not. A
+  property test asserts it never disagrees with `decide`.
+- `services_for_bundle(team, bundle)`, `app_ids_for_bundle(bundle)`, and `split_app_id`, because
+  `yurl` and `@linkforty/aasa-core` both take the two halves apart, as Xcode does.
+  `app_ids_for_bundle` answers "which team prefix does this file still name for my app", the
+  symptom when an app moves between teams.
+- CMS-signed (iOS 9 era) association files are now recognised and read. `yurl` handles them; every
+  JavaScript tool reports them as invalid JSON at byte 0. The DER is walked with no dependencies,
+  the payload extracted, and `AASA200` reports in as many words that the signature was **not**
+  verified — reading is not checking.
+- `conformance/cases.json`: 73 matching and 14 validation cases, each tagged with its feature, a
+  source link, and whether Apple documents the behaviour or this crate decided it. Run by the Rust
+  suite and the WebAssembly suite, and published so other implementations can be held to it —
+  `conformance/run-third-party.mjs` points it at anyone else's library.
+- WebAssembly: `appsForUrl`, `servicesForBundle`, `appIdsForBundle`, `splitAppId`.
+- `docs/roadmap.md` records why there is no hand-written JavaScript port and no MCP server.
+
+### Measured
+
+Scoring `universal-links-test` against the corpus: 52 of 70 applicable cases. It is solid on rule
+ordering, `exclude`, wildcards, and the defaults hierarchy. It scores 10/20 on substitution
+variables — and all ten passes are cases expecting `no_match`, which any implementation that
+silently matches nothing passes for free. **No surveyed tool expands `$(...)` at all.**
+
 ## [0.1.0] - 2026-09-01
 
 First release. A semantic engine for Apple Associated Domains, usable from Rust and WebAssembly.

@@ -138,6 +138,33 @@ proptest! {
         prop_assert_eq!(fast, traced.decision, "\n{}", traced);
     }
 
+    /// The reverse query must never disagree with the per-app decision.
+    #[test]
+    fn apps_for_url_agrees_with_decide(
+        pattern in "[ab/*?]{0,8}",
+        path in "[ab/]{0,8}",
+        exclude in any::<bool>(),
+    ) {
+        let json = format!(
+            r#"{{"applinks":{{"details":[
+                {{"appIDs":["T.a","T.b"],"components":[{{"/":"/{pattern}","exclude":{exclude}}}]}},
+                {{"appIDs":["T.b","T.c"],"components":[{{"/":"/x/*"}}]}}
+            ]}}}}"#
+        );
+        let aasa = CompiledAasa::parse(json.as_bytes()).unwrap();
+        let url = format!("https://e.test/{path}");
+        let listed = aasa.apps_for_url("e.test", &url).unwrap();
+
+        for app in ["T.a", "T.b", "T.c", "T.absent"] {
+            let direct = aasa.decide("e.test", app, &url).unwrap();
+            let reverse = listed
+                .iter()
+                .find(|(candidate, _)| candidate == app)
+                .map_or(blazingly_aasa::MatchDecision::NoMatch, |(_, d)| *d);
+            prop_assert_eq!(direct, reverse, "{} at {}", app, url);
+        }
+    }
+
     /// Compiling is deterministic: the same bytes always produce the same normalized form.
     #[test]
     fn compilation_is_deterministic(pattern in "[a-z/*?]{0,12}") {

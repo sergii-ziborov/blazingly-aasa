@@ -231,6 +231,50 @@ impl Aasa {
         Ok(result.to_string())
     }
 
+    /// Every app this document lets open `url`, as `[{ appId, decision }]` in document order.
+    ///
+    /// The inverse of `decide`: instead of asking about one app, ask which apps a URL reaches.
+    /// Apps that do not match are omitted.
+    ///
+    /// # Errors
+    ///
+    /// Throws when `url` cannot be split, or the result cannot be converted.
+    #[wasm_bindgen(js_name = appsForUrl)]
+    pub fn apps_for_url(&self, url: &str) -> Result<JsValue, JsError> {
+        let apps = self
+            .inner
+            .apps_for_url(&self.domain, url)
+            .map_err(|error| JsError::new(&error.to_string()))?;
+        let rendered: Vec<AppDecision> = apps
+            .into_iter()
+            .map(|(app_id, decision)| AppDecision {
+                app_id,
+                decision: decision_name(decision),
+            })
+            .collect();
+        to_js(&rendered)
+    }
+
+    /// Every service this domain grants the app built from a team prefix and bundle identifier.
+    ///
+    /// # Errors
+    ///
+    /// Throws if the list cannot be converted to a JavaScript value.
+    #[wasm_bindgen(js_name = servicesForBundle)]
+    pub fn services_for_bundle(&self, team_id: &str, bundle_id: &str) -> Result<JsValue, JsError> {
+        to_js(&self.inner.services_for_bundle(team_id, bundle_id))
+    }
+
+    /// Every application identifier with this bundle identifier, whatever its team prefix.
+    ///
+    /// # Errors
+    ///
+    /// Throws if the list cannot be converted to a JavaScript value.
+    #[wasm_bindgen(js_name = appIdsForBundle)]
+    pub fn app_ids_for_bundle(&self, bundle_id: &str) -> Result<JsValue, JsError> {
+        to_js(&self.inner.app_ids_for_bundle(bundle_id))
+    }
+
     /// The services this domain grants `app_id`, as an array of strings.
     ///
     /// # Errors
@@ -274,6 +318,14 @@ impl Aasa {
     pub fn semantic_equal(&self, other: &Aasa) -> bool {
         self.inner.semantic_equal(&other.inner)
     }
+}
+
+/// One entry of `appsForUrl`.
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AppDecision {
+    app_id: String,
+    decision: &'static str,
 }
 
 fn decision_name(decision: MatchDecision) -> &'static str {
@@ -332,6 +384,14 @@ pub fn match_pattern(pattern: &str, input: &str, case_sensitive: bool) -> Result
     let compiled = blazingly_aasa::WildcardPattern::compile(pattern, case_sensitive)
         .map_err(|error| JsError::new(&error.to_string()))?;
     Ok(compiled.matches(input))
+}
+
+/// Splits `ABCDE12345.com.example.app` into `[prefix, bundleId]`, or returns `null`.
+#[wasm_bindgen(js_name = splitAppId)]
+#[must_use]
+pub fn split_app_id(app_id: &str) -> Option<Vec<String>> {
+    blazingly_aasa::split_app_id(app_id)
+        .map(|(prefix, bundle)| vec![prefix.to_owned(), bundle.to_owned()])
 }
 
 /// The Foundation release the `$(region)` and `$(lang)` tables were generated from.

@@ -72,7 +72,29 @@ pub(crate) fn parse(bytes: &[u8], options: &ParseOptions) -> Result<AasaDocument
         ));
     }
 
-    let value: Value = blazingly_json::from_slice(bytes)
+    // Association files served for iOS 9 are CMS-signed DER, not JSON. Recognise those and read
+    // the encapsulated payload rather than reporting a baffling syntax error at byte 0.
+    let mut signed = None;
+    let json = if crate::signed::looks_like_der(bytes) {
+        match crate::signed::extract_payload(bytes) {
+            Some(payload) => {
+                signed = Some(payload);
+                signed.as_deref().unwrap_or(bytes)
+            }
+            None => {
+                return Err(ParseError::new(
+                    ParseErrorKind::Json,
+                    "payload begins with a DER SEQUENCE, so it looks like a CMS-signed \
+                     association file, but no encapsulated JSON content could be read from it"
+                        .to_owned(),
+                ))
+            }
+        }
+    } else {
+        bytes
+    };
+
+    let value: Value = blazingly_json::from_slice(json)
         .map_err(|error| ParseError::new(ParseErrorKind::Json, error.to_string()))?;
 
     let Value::Object(root) = value else {
@@ -86,6 +108,20 @@ pub(crate) fn parse(bytes: &[u8], options: &ParseOptions) -> Result<AasaDocument
     };
 
     let mut walker = Walker::default();
+    if signed.is_some() {
+        walker.push(
+            Diagnostic::new(
+                DiagnosticCode::SignedPayload,
+                "",
+                "this is a CMS-signed association file; its JSON payload was extracted but the \
+                 signature was NOT verified",
+            )
+            .with_help(
+                "signing was only required for iOS 9; iOS 10 and later expect unsigned JSON served \
+                 over https",
+            ),
+        );
+    }
     let mut document = AasaDocument {
         applinks: None,
         webcredentials: None,

@@ -191,6 +191,59 @@ impl CompiledAasa {
         MatchDecision::NoMatch
     }
 
+    /// Every app this document would let open `url`, in document order.
+    ///
+    /// The inverse of [`CompiledAasa::decide`]: instead of asking about one app, ask which apps a
+    /// URL reaches. A domain owner auditing "who can open `/buy/*`?" wants this, and answering it
+    /// by looping [`CompiledAasa::decide`] over every app would rescan the rules once per app.
+    ///
+    /// Apps whose verdict is [`MatchDecision::NoMatch`] are omitted, so an empty result means no
+    /// app claims the URL. An app that appears in several `details` entries takes its verdict from
+    /// the first entry that matched, which is the same rule [`CompiledAasa::decide`] follows.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`UrlError`] when `url` cannot be split into scheme, host, and path.
+    pub fn apps_for_url(
+        &self,
+        domain: &str,
+        url: &str,
+    ) -> Result<Vec<(String, MatchDecision)>, UrlError> {
+        let parts = UrlParts::parse(url)?;
+        Ok(self.apps_for_url_parts(domain, &parts))
+    }
+
+    /// The same, for a URL that has already been split.
+    #[must_use]
+    pub fn apps_for_url_parts(
+        &self,
+        domain: &str,
+        parts: &UrlParts<'_>,
+    ) -> Vec<(String, MatchDecision)> {
+        let mut found: Vec<(String, MatchDecision)> = Vec::new();
+        if let Preflight::Stop(_) = preflight(self, domain, parts) {
+            return found;
+        }
+        let inputs = Inputs::new(parts, self.needs_decoded, self.needs_query_items);
+
+        for detail in &self.details {
+            let Some(rule) = detail.rules.iter().find(|rule| rule_matches(rule, &inputs)) else {
+                continue;
+            };
+            let decision = if rule.exclude {
+                MatchDecision::Exclude
+            } else {
+                MatchDecision::Match
+            };
+            for app_id in &detail.app_ids {
+                if !found.iter().any(|(existing, _)| existing == app_id) {
+                    found.push((app_id.clone(), decision));
+                }
+            }
+        }
+        found
+    }
+
     /// Decides, and records why.
     ///
     /// Pass an empty `domain` to skip the host check, for example when testing a file in

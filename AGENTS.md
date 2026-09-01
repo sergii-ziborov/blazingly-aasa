@@ -34,6 +34,20 @@ be interpreted.
 **Never claim device behaviour.** The crate knows what a document says. It does not know what an
 iPhone will do.
 
+## The conformance corpus
+
+`conformance/cases.json` is the cross-implementation contract. The Rust suite and the WebAssembly
+suite both run it, and it is published for anyone else's implementation to be held to.
+
+Settling a semantic question means **adding a case**, not just a Rust test. A case tagged
+`documented` needs a `source` link to the Apple page that states the behaviour; one tagged
+`decided` needs a `note` saying what was chosen and why, and a matching row in `docs/parity.md`.
+`scripts/check_corpus.py` enforces both, so a case cannot be added without saying where it comes
+from.
+
+Never delete a case to make a change pass. If behaviour genuinely should change, change the case in
+the same commit and say why in the message -- the corpus is the record of what this crate promises.
+
 ## Diagnostics
 
 Codes are a public contract. Add new ones; never repurpose an existing one, never renumber, never

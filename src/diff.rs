@@ -8,7 +8,7 @@
 //! Equivalence is only ever claimed when normalisation can prove it. Anything this crate cannot
 //! reduce to a comparable form is reported as a change.
 
-use crate::compile::{CompiledAasa, EffectiveRule, Service};
+use crate::compile::{CompiledAasa, EffectiveRule, Service, SERVICES};
 use serde::Serialize;
 use std::collections::BTreeSet;
 use std::fmt;
@@ -193,13 +193,6 @@ impl fmt::Display for AasaDiff {
         Ok(())
     }
 }
-
-const SERVICES: [Service; 4] = [
-    Service::AppLinks,
-    Service::WebCredentials,
-    Service::AppClips,
-    Service::ActivityContinuation,
-];
 
 impl CompiledAasa {
     /// Compares this document with `other`, reporting only differences that change behaviour.

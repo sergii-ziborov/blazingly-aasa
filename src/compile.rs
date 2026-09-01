@@ -16,6 +16,13 @@ use crate::substitution::SubstitutionTable;
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 
+pub(crate) const SERVICES: [Service; 4] = [
+    Service::AppLinks,
+    Service::WebCredentials,
+    Service::AppClips,
+    Service::ActivityContinuation,
+];
+
 /// An Associated Domains service.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 #[serde(rename_all = "lowercase")]
@@ -283,6 +290,36 @@ impl CompiledAasa {
         self.activitycontinuation
             .iter()
             .any(|entry| entry == app_id)
+    }
+
+    /// Every service this domain grants the app built from a team prefix and bundle identifier.
+    ///
+    /// Convenience for callers that hold the two halves separately — Xcode shows them apart, and
+    /// so do most validators.
+    #[must_use]
+    pub fn services_for_bundle(&self, team_id: &str, bundle_id: &str) -> Vec<Service> {
+        self.services_for_app(&format!("{team_id}.{bundle_id}"))
+    }
+
+    /// Every application identifier in the document whose bundle identifier is `bundle_id`,
+    /// whatever its team prefix.
+    ///
+    /// Useful when an app moved between teams and you want to know which prefix the file still
+    /// names.
+    #[must_use]
+    pub fn app_ids_for_bundle(&self, bundle_id: &str) -> Vec<&str> {
+        let mut found: Vec<&str> = Vec::new();
+        for service in SERVICES {
+            for app_id in self.apps_for_service(service) {
+                if crate::split_app_id(app_id).is_some_and(|(_, bundle)| bundle == bundle_id)
+                    && !found.contains(&app_id)
+                {
+                    found.push(app_id);
+                }
+            }
+        }
+        found.sort_unstable();
+        found
     }
 
     /// Every service this domain grants `app_id`.

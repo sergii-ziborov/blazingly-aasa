@@ -55,6 +55,9 @@ closest failure:
   effective `caseSensitive` and `percentEncoded` were, and exactly which component failed.
 - **Compares** two files semantically — behaviour, not bytes. Hoisting `caseSensitive` into
   `defaults` reports no change; reordering two rules reports a move.
+- **Answers in both directions**: does *this app* get *this URL*, and which apps does a URL reach.
+- **Reads CMS-signed files** from the iOS 9 era, which every JavaScript tool rejects as invalid
+  JSON — extracting the payload, and saying plainly that the signature was not verified.
 - **Runs everywhere**: Rust, and a WebAssembly package for browsers, Node, and Bun.
 
 ## What it does not do
@@ -105,6 +108,15 @@ assert_eq!(hit.decision, MatchDecision::Match);
 let miss = aasa.match_url("example.com", app, "https://example.com/help/1?articleNumber=481")?;
 assert_eq!(miss.decision, MatchDecision::NoMatch);
 println!("{miss}"); // the trace above
+```
+
+The other direction — which apps does a URL reach?
+
+```rust
+for (app_id, decision) in aasa.apps_for_url("example.com", "https://example.com/help/1?articleNumber=4815")? {
+    println!("{app_id}: {decision}");
+}
+// ABCDE12345.com.example.app: MATCH
 ```
 
 Linting, with codes you can build CI on:
@@ -158,6 +170,53 @@ try {
 ```
 
 Works in browsers, Node, and Bun. Details in [docs/wasm.md](docs/wasm.md).
+
+## How this compares
+
+There are four AASA tools with real usage. [docs/competitors.md](docs/competitors.md) reads each
+one's source and maps what it covers. The short version: **they are validators, this is an engine.**
+
+`yurl`, `Universal-Link-Validator`, and `@linkforty/aasa-core` fetch the file and check how it is
+hosted — genuinely valuable, and deliberately not this crate's job. None of them evaluates a URL
+against the rules at all.
+
+`st-tech/universal-links-test` does, and it is well built: rule ordering, `exclude`, wildcards, and
+the defaults hierarchy are all correct. So it can be scored against the same corpus this crate runs:
+
+| Feature | universal-links-test | blazingly-aasa |
+| --- | --- | --- |
+| rule order, `exclude`, wildcards, defaults | 24/24 | 24/24 |
+| query | 6/8 | 8/8 |
+| percent encoding | 3/6 | 6/6 |
+| **substitution variables** | **10/20** | 20/20 |
+| legacy `paths`, legacy `details` | 1/4 | 4/4 |
+| **total** | **52/70** | 70/70 |
+
+That substitution row is the reason this crate exists, and it needs reading carefully. Exactly ten
+of those twenty cases expect `no_match`; it passes all ten of those and none of the other ten —
+because **no surveyed tool expands `$(...)` at all.** They declare `substitutionVariables` in their
+types and ignore it when matching. Its score there is not "half right", it is zero right with half
+the cases passing by accident.
+
+That is the dangerous failure mode: a file using `$(lang)` does not error, it silently matches
+nothing, and the check stays green.
+
+## The conformance corpus
+
+`conformance/cases.json` is 73 matching and 14 validation cases, each tagged with the feature it
+covers, a link to the Apple page that documents it, and whether the behaviour is **documented** by
+Apple or **decided** by this crate.
+
+The Rust suite and the WebAssembly suite both run it, so a binding bug cannot hide behind passing
+Rust tests. It is published rather than kept internal, because a shared corpus is how the whole
+ecosystem gets more correct rather than just this crate:
+
+```bash
+node conformance/run-third-party.mjs ./path/to/some-other-implementation.js
+```
+
+The runner reports how many passes are *trivial* — an implementation that silently matches nothing
+passes every `expect: no_match` case, and a comparison that hides this overstates the loser.
 
 ## Performance
 
@@ -347,6 +406,8 @@ it*; normalising first would change what the patterns see.
 
 | | |
 | --- | --- |
+| [docs/competitors.md](docs/competitors.md) | what the existing tools cover, measured against the corpus |
+| [docs/roadmap.md](docs/roadmap.md) | why there is no hand-written JS port, and no MCP server yet |
 | [docs/semantics.md](docs/semantics.md) | what is implemented and where each rule comes from |
 | [docs/parity.md](docs/parity.md) | feature-by-feature: documented by Apple, or decided here |
 | [docs/diagnostics.md](docs/diagnostics.md) | every `AASA###` code and a suggested CI policy |
@@ -363,7 +424,8 @@ cargo +1.78 check -p blazingly-aasa --lib
 
 ./bindings/wasm/build.sh
 node bindings/wasm/tests/node.test.mjs
-bun  bindings/wasm/tests/node.test.mjs
+node bindings/wasm/tests/conformance.mjs
+bun  bindings/wasm/tests/conformance.mjs
 ```
 
 Benchmarks:

@@ -14,7 +14,7 @@ import assert from "node:assert/strict";
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..", "..", "..");
 const wasm = await import(join(here, "..", "pkg-node", "blazingly_aasa.js"));
-const { Aasa, diffAasa, matchPattern, validateAasa, isoTableSource } = wasm;
+const { Aasa, diffAasa, matchPattern, validateAasa, isoTableSource, splitAppId } = wasm;
 
 const fixture = (name) => readFileSync(join(root, "tests", "fixtures", name));
 
@@ -148,6 +148,61 @@ test("normalized output resolves defaults", () => {
   );
   assert.match(aasa.normalizedJson(), /"case_sensitive": false/);
   aasa.free();
+});
+
+test("lists every app a URL reaches", () => {
+  const many = Aasa.compile(
+    Buffer.from(JSON.stringify({ applinks: { details: [
+      { appIDs: ["T1.com.a", "T1.com.b"], components: [{ "/": "/shop/*" }] },
+      { appID: "T1.com.blocked", components: [{ "/": "/shop/*", exclude: true }] },
+      { appID: "T1.com.other", components: [{ "/": "/news/*" }] },
+    ] } })),
+    DOMAIN,
+  );
+  assert.deepEqual(many.appsForUrl("https://example.com/shop/42"), [
+    { appId: "T1.com.a", decision: "match" },
+    { appId: "T1.com.b", decision: "match" },
+    { appId: "T1.com.blocked", decision: "exclude" },
+  ]);
+  assert.deepEqual(many.appsForUrl("https://example.com/nothing"), []);
+  many.free();
+});
+
+test("accepts team and bundle identifiers separately", () => {
+  const all = Aasa.compile(fixture("apple/all-services.json"), DOMAIN);
+  assert.deepEqual(all.servicesForBundle("ABCDE12345", "com.example.app"),
+    ["applinks", "webcredentials", "activitycontinuation"]);
+  assert.deepEqual(all.servicesForBundle("ZZZZZ00000", "com.example.app"), []);
+  assert.deepEqual(all.appIdsForBundle("com.example.app"), [APP]);
+  all.free();
+
+  assert.deepEqual(splitAppId(APP), ["ABCDE12345", "com.example.app"]);
+  assert.equal(splitAppId("nodots"), undefined);
+});
+
+test("reads a CMS-signed association file", () => {
+  // Minimal iOS 9 style SignedData wrapper around the JSON payload.
+  const tlv = (tag, contents) => {
+    const len = contents.length;
+    const header = len < 0x80 ? [tag, len]
+      : len < 0x100 ? [tag, 0x81, len]
+      : [tag, 0x82, len >> 8, len & 0xff];
+    return Buffer.concat([Buffer.from(header), Buffer.from(contents)]);
+  };
+  const OID_DATA = Buffer.from([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01]);
+  const OID_SIGNED = Buffer.from([0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02]);
+  const payload = Buffer.from(JSON.stringify({
+    applinks: { details: [{ appID: APP, components: [{ "/": "/buy/*" }] }] },
+  }));
+  const encap = tlv(0x30, Buffer.concat([tlv(0x06, OID_DATA), tlv(0xa0, tlv(0x04, payload))]));
+  const signedData = tlv(0x30, Buffer.concat([tlv(0x02, Buffer.from([1])), tlv(0x31, Buffer.alloc(0)), encap]));
+  const der = tlv(0x30, Buffer.concat([tlv(0x06, OID_SIGNED), tlv(0xa0, signedData)]));
+
+  const signed = Aasa.compile(der, DOMAIN);
+  assert.equal(signed.decide(APP, "https://example.com/buy/1"), "match");
+  const codes = signed.validate().map((d) => d.code);
+  assert.ok(codes.includes("AASA200"), `expected AASA200 in ${codes}`);
+  signed.free();
 });
 
 overview.free();

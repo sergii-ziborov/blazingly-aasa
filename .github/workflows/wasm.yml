@@ -38,6 +38,13 @@ jobs:
       - name: Bun
         run: bun bindings/wasm/tests/node.test.mjs
 
+      # The Rust suite runs the same corpus. Disagreement here means the binding is wrong.
+      - name: Conformance corpus (Node)
+        run: node bindings/wasm/tests/conformance.mjs
+
+      - name: Conformance corpus (Bun)
+        run: bun bindings/wasm/tests/conformance.mjs
+
       - name: Report payload size
         run: |
           wasm=$(find bindings/wasm/pkg -name '*.wasm')

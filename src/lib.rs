@@ -107,6 +107,7 @@ mod model;
 mod normalize;
 mod parse;
 mod pattern;
+mod signed;
 mod substitution;
 mod url;
 mod validate;
@@ -183,6 +184,26 @@ impl AasaDocument {
     pub fn byte_len(&self) -> usize {
         self.byte_len
     }
+}
+
+/// Splits `ABCDE12345.com.example.app` into its application identifier prefix and bundle
+/// identifier.
+///
+/// Apple documents the form as `<Application Identifier Prefix>.<Bundle Identifier>`, and the
+/// prefix never contains a dot, so the split is at the first one. Returns `None` when there is no
+/// dot, or when either half would be empty.
+///
+/// ```
+/// assert_eq!(
+///     blazingly_aasa::split_app_id("ABCDE12345.com.example.app"),
+///     Some(("ABCDE12345", "com.example.app")),
+/// );
+/// assert_eq!(blazingly_aasa::split_app_id("nodots"), None);
+/// ```
+#[must_use]
+pub fn split_app_id(app_id: &str) -> Option<(&str, &str)> {
+    let (prefix, bundle) = app_id.split_once('.')?;
+    (!prefix.is_empty() && !bundle.is_empty()).then_some((prefix, bundle))
 }
 
 /// Parses and validates in one call.

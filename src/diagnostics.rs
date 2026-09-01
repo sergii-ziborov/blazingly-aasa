@@ -110,6 +110,7 @@ diagnostic_codes! {
     DefaultsContainsPatternKeys => ("AASA192", Info, "defaults object carries pattern keys with undocumented behavior"),
     NoDetails => ("AASA193", Warning, "applinks declares no details, so no app can open this domain"),
     EmptyPatternAlternative => ("AASA194", Warning, "substitution value is empty"),
+    SignedPayload => ("AASA200", Warning, "the file is CMS-signed; the signature was not verified"),
 }
 
 impl fmt::Display for DiagnosticCode {

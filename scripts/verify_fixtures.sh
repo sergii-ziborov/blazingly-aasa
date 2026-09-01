@@ -22,6 +22,10 @@ while IFS= read -r fixture; do
   fi
 done < <(find tests/fixtures -name '*.json' | sort)
 
+if command -v python3 >/dev/null; then
+  python3 scripts/check_corpus.py || status=1
+fi
+
 if [ "$status" -eq 0 ]; then
   echo "all fixtures are valid JSON and referenced by tests"
 fi

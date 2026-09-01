@@ -1,0 +1,2442 @@
+{
+  "version": 1,
+  "description": "Conformance cases for apple-app-site-association semantics. Any implementation claiming to evaluate AASA should pass all of them.",
+  "statuses": {
+    "documented": "Apple's reference states this behaviour.",
+    "decided": "Apple does not state it; blazingly-aasa chose a reading. See docs/parity.md."
+  },
+  "decisions": [
+    "match",
+    "exclude",
+    "no_match"
+  ],
+  "matching": [
+    {
+      "name": "apple/overview/buy-matches",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy/42",
+      "expect": "match"
+    },
+    {
+      "name": "apple/overview/earlier-exclude-wins",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy/42#no_universal_links",
+      "expect": "exclude"
+    },
+    {
+      "name": "apple/overview/specific-exclude-before-general",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/help/website/faq?articleNumber=4815",
+      "expect": "exclude"
+    },
+    {
+      "name": "apple/overview/query-four-chars",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/help/123?articleNumber=4815",
+      "expect": "match"
+    },
+    {
+      "name": "apple/overview/query-three-chars",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/help/123?articleNumber=481",
+      "expect": "no_match"
+    },
+    {
+      "name": "apple/overview/query-five-chars",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/help/123?articleNumber=48159",
+      "expect": "no_match"
+    },
+    {
+      "name": "apple/overview/query-item-absent",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/help/123",
+      "expect": "no_match"
+    },
+    {
+      "name": "apple/overview/unmatched-path",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/elsewhere",
+      "expect": "no_match"
+    },
+    {
+      "name": "apple/overview/second-app-id-also-matches",
+      "feature": "appIDs",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app2",
+      "url": "https://example.com/buy/42",
+      "expect": "match"
+    },
+    {
+      "name": "apple/overview/unlisted-app-never-matches",
+      "feature": "appIDs",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app",
+                "ABCDE12345.com.example.app2"
+              ],
+              "components": [
+                {
+                  "#": "no_universal_links",
+                  "exclude": true
+                },
+                {
+                  "/": "/buy/*"
+                },
+                {
+                  "/": "/help/website/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/help/*",
+                  "?": {
+                    "articleNumber": "????"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ZZZZZ99999.com.other.app",
+      "url": "https://example.com/buy/42",
+      "expect": "no_match"
+    },
+    {
+      "name": "apple/components/all-specified-must-match",
+      "feature": "components",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/abc",
+                  "?": "def",
+                  "#": "*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/abc?def",
+      "expect": "match"
+    },
+    {
+      "name": "apple/components/missing-query-fails",
+      "feature": "components",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/abc",
+                  "?": "def",
+                  "#": "*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/abc",
+      "expect": "no_match",
+      "note": "Apple states this URL does not match."
+    },
+    {
+      "name": "apple/components/missing-path-fails",
+      "feature": "components",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/abc",
+                  "?": "def",
+                  "#": "*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com?def",
+      "expect": "no_match",
+      "note": "Apple states this URL does not match."
+    },
+    {
+      "name": "defaults/unspecified-path-matches-anything",
+      "feature": "component-defaults",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "#": "promo"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/b?c=d#promo",
+      "expect": "match"
+    },
+    {
+      "name": "defaults/absent-fragment-matches-star",
+      "feature": "component-defaults",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a",
+                  "?": "*",
+                  "#": "*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a",
+      "expect": "match",
+      "note": "Apple's own example relies on `#: *` matching a URL with no fragment."
+    },
+    {
+      "name": "defaults/absent-fragment-fails-question-star",
+      "feature": "wildcards",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a",
+                  "#": "?*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a",
+      "expect": "no_match"
+    },
+    {
+      "name": "wildcards/star-matches-empty",
+      "feature": "wildcards",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy/",
+      "expect": "match"
+    },
+    {
+      "name": "wildcards/star-crosses-slashes",
+      "feature": "wildcards",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy/42/x",
+      "expect": "match"
+    },
+    {
+      "name": "wildcards/star-needs-the-literal-prefix",
+      "feature": "wildcards",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy",
+      "expect": "no_match"
+    },
+    {
+      "name": "wildcards/question-exact-count",
+      "feature": "wildcards",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/????"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/4815",
+      "expect": "match"
+    },
+    {
+      "name": "wildcards/question-too-few",
+      "feature": "wildcards",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/????"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/481",
+      "expect": "no_match"
+    },
+    {
+      "name": "wildcards/question-star-needs-one",
+      "feature": "wildcards",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/?*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/",
+      "expect": "no_match"
+    },
+    {
+      "name": "wildcards/question-star-one-is-enough",
+      "feature": "wildcards",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/?*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/b",
+      "expect": "match"
+    },
+    {
+      "name": "order/exclude-first-blocks",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/private/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/a/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/private/x",
+      "expect": "exclude"
+    },
+    {
+      "name": "order/general-rule-still-matches",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/private/*",
+                  "exclude": true
+                },
+                {
+                  "/": "/a/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/public",
+      "expect": "match"
+    },
+    {
+      "name": "order/reversed-makes-exclude-unreachable",
+      "feature": "rule-order",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/*"
+                },
+                {
+                  "/": "/a/private/*",
+                  "exclude": true
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/private/x",
+      "expect": "match",
+      "note": "First match wins, so the later exclude never runs."
+    },
+    {
+      "name": "defaults/rule-overrides-app",
+      "feature": "defaults-hierarchy",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/defaults-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/Loose/*",
+                  "caseSensitive": false
+                },
+                {
+                  "/": "/Strict/*"
+                }
+              ],
+              "defaults": {
+                "caseSensitive": true
+              }
+            }
+          ],
+          "defaults": {
+            "caseSensitive": false
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/loose/1",
+      "expect": "match"
+    },
+    {
+      "name": "defaults/app-overrides-domain",
+      "feature": "defaults-hierarchy",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/defaults-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/Loose/*",
+                  "caseSensitive": false
+                },
+                {
+                  "/": "/Strict/*"
+                }
+              ],
+              "defaults": {
+                "caseSensitive": true
+              }
+            }
+          ],
+          "defaults": {
+            "caseSensitive": false
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/strict/1",
+      "expect": "no_match"
+    },
+    {
+      "name": "defaults/app-level-exact-case-matches",
+      "feature": "defaults-hierarchy",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/defaults-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/Loose/*",
+                  "caseSensitive": false
+                },
+                {
+                  "/": "/Strict/*"
+                }
+              ],
+              "defaults": {
+                "caseSensitive": true
+              }
+            }
+          ],
+          "defaults": {
+            "caseSensitive": false
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/Strict/1",
+      "expect": "match"
+    },
+    {
+      "name": "defaults/case-sensitive-is-true-by-default",
+      "feature": "case-sensitivity",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/Help/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/help/1",
+      "expect": "no_match"
+    },
+    {
+      "name": "query/whole-string-must-match-entirely",
+      "feature": "query",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": "a=1"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "match"
+    },
+    {
+      "name": "query/whole-string-rejects-extra-items",
+      "feature": "query",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": "a=1"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1&b=2",
+      "expect": "no_match"
+    },
+    {
+      "name": "query/dictionary-ignores-unnamed-items",
+      "feature": "query",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "a": "1"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1&b=2",
+      "expect": "match"
+    },
+    {
+      "name": "query/dictionary-requires-named-item",
+      "feature": "query",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "a": "1"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?b=2",
+      "expect": "no_match"
+    },
+    {
+      "name": "query/all-named-predicates-must-hold",
+      "feature": "query",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "a": "1",
+                    "b": "*"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "no_match"
+    },
+    {
+      "name": "query/item-without-equals-is-empty",
+      "feature": "query",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "flag": ""
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?flag",
+      "expect": "match",
+      "note": "Apple does not document valueless query items."
+    },
+    {
+      "name": "query/repeated-name-matches-any-occurrence",
+      "feature": "query",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "42"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=7&id=42",
+      "expect": "match",
+      "note": "Apple does not document which occurrence wins."
+    },
+    {
+      "name": "query/non-string-predicate-never-matches",
+      "feature": "query",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "flag": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?flag=1",
+      "expect": "no_match",
+      "note": "Apple documents only string patterns here."
+    },
+    {
+      "name": "encoding/default-compares-encoded-url",
+      "feature": "percent-encoding",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a%20b"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%20b",
+      "expect": "match",
+      "note": "Apple says only that percentEncoded indicates 'whether URLs are percent-encoded'. This crate reads the default as comparing the pattern against the URL component exactly as written."
+    },
+    {
+      "name": "encoding/default-rejects-decoded-pattern",
+      "feature": "percent-encoding",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a b"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%20b",
+      "expect": "no_match",
+      "note": "The corollary of the default: a pattern written with literal characters does not match an encoded URL unless percentEncoded is turned off."
+    },
+    {
+      "name": "encoding/false-decodes-the-url",
+      "feature": "percent-encoding",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a b",
+                  "percentEncoded": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%20b",
+      "expect": "match",
+      "note": "With percentEncoded false this crate decodes the URL rather than encoding the pattern, because encoding a pattern containing * and ? is not well defined."
+    },
+    {
+      "name": "encoding/encoded-slash-is-not-a-separator",
+      "feature": "percent-encoding",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/b"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%2Fb",
+      "expect": "no_match",
+      "note": "%2F stays encoded under the default, so a rule written as /a/b does not accept /a%2Fb. This is the security-relevant half of the percentEncoded choice."
+    },
+    {
+      "name": "encoding/decoding-erases-the-slash-distinction",
+      "feature": "percent-encoding",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/b",
+                  "percentEncoded": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%2Fb",
+      "expect": "match",
+      "note": "The other half: turning decoding on makes /a%2Fb indistinguishable from /a/b. Worth knowing before setting percentEncoded false on a rule that guards something."
+    },
+    {
+      "name": "encoding/non-ascii-decoded",
+      "feature": "percent-encoding",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/café/*",
+                  "percentEncoded": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/caf%C3%A9/menu",
+      "expect": "match",
+      "note": "Decoding lets a pattern contain literal non-ASCII text, which is the main reason to set percentEncoded false at all."
+    },
+    {
+      "name": "substitution/apple-reference-example",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/$(lang)_$(region)/$(food)/"
+                }
+              ]
+            }
+          ],
+          "substitutionVariables": {
+            "food": [
+              "burrito",
+              "pizza",
+              "sushi",
+              "samosa"
+            ]
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/en_US/pizza/",
+      "expect": "match"
+    },
+    {
+      "name": "substitution/unlisted-value-fails",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/$(lang)_$(region)/$(food)/"
+                }
+              ]
+            }
+          ],
+          "substitutionVariables": {
+            "food": [
+              "burrito",
+              "pizza",
+              "sushi",
+              "samosa"
+            ]
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/en_US/tacos/",
+      "expect": "no_match"
+    },
+    {
+      "name": "substitution/unknown-locale-fails",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/$(lang)_$(region)/$(food)/"
+                }
+              ]
+            }
+          ],
+          "substitutionVariables": {
+            "food": [
+              "burrito",
+              "pizza",
+              "sushi",
+              "samosa"
+            ]
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/qq_ZZ/pizza/",
+      "expect": "no_match"
+    },
+    {
+      "name": "substitution/literal-text-is-not-the-variable",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/$(lang)_$(region)/$(food)/"
+                }
+              ]
+            }
+          ],
+          "substitutionVariables": {
+            "food": [
+              "burrito",
+              "pizza",
+              "sushi",
+              "samosa"
+            ]
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/en_US/$(food)/",
+      "expect": "no_match",
+      "note": "A pattern of $(food) must not compare as the literal text $(food)."
+    },
+    {
+      "name": "substitution/region-uses-iso-not-prose",
+      "feature": "substitutions",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/$(region)/home"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/GB/home",
+      "expect": "match",
+      "note": "$(region) is generated from Foundation's isoRegionCodes rather than transcribed, so the list Apple points at wins over the examples in Apple's prose."
+    },
+    {
+      "name": "substitution/region-rejects-uk",
+      "feature": "substitutions",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/$(region)/home"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/UK/home",
+      "expect": "no_match",
+      "note": "Apple's prose lists UK, but isoRegionCodes contains GB and not UK."
+    },
+    {
+      "name": "substitution/class-digit-accepts",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(digit)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/7",
+      "expect": "match"
+    },
+    {
+      "name": "substitution/class-digit-rejects",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(digit)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/x",
+      "expect": "no_match"
+    },
+    {
+      "name": "substitution/class-alpha-accepts",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(alpha)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/q",
+      "expect": "match"
+    },
+    {
+      "name": "substitution/class-alpha-rejects",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(alpha)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/7",
+      "expect": "no_match"
+    },
+    {
+      "name": "substitution/class-upper-accepts",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(upper)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/Q",
+      "expect": "match"
+    },
+    {
+      "name": "substitution/class-upper-rejects",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(upper)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/q",
+      "expect": "no_match"
+    },
+    {
+      "name": "substitution/class-lower-accepts",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(lower)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/q",
+      "expect": "match"
+    },
+    {
+      "name": "substitution/class-lower-rejects",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(lower)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/Q",
+      "expect": "no_match"
+    },
+    {
+      "name": "substitution/class-alnum-accepts",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(alnum)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/7",
+      "expect": "match"
+    },
+    {
+      "name": "substitution/class-alnum-rejects",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(alnum)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/-",
+      "expect": "no_match"
+    },
+    {
+      "name": "substitution/class-xdigit-accepts",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(xdigit)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/f",
+      "expect": "match"
+    },
+    {
+      "name": "substitution/class-xdigit-rejects",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(xdigit)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/g",
+      "expect": "no_match"
+    },
+    {
+      "name": "substitution/class-folds-when-case-insensitive",
+      "feature": "substitutions",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/id/$(upper)",
+                  "caseSensitive": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/id/q",
+      "expect": "match",
+      "note": "Predefined variables are lists of strings, so folding applies to them too."
+    },
+    {
+      "name": "substitution/values-may-contain-wildcards",
+      "feature": "substitutions",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/$(kind)/x"
+                }
+              ]
+            }
+          ],
+          "substitutionVariables": {
+            "kind": [
+              "a*z"
+            ]
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/abcz/x",
+      "expect": "match"
+    },
+    {
+      "name": "legacy/paths-positive",
+      "feature": "legacy-paths",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "aasa": {
+        "applinks": {
+          "apps": [],
+          "details": [
+            {
+              "appID": "ABCDE12345.com.example.app",
+              "paths": [
+                "NOT /wwdc/internal/*",
+                "/wwdc/*"
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/wwdc/2015",
+      "expect": "match"
+    },
+    {
+      "name": "legacy/paths-not-exclusion",
+      "feature": "legacy-paths",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "aasa": {
+        "applinks": {
+          "apps": [],
+          "details": [
+            {
+              "appID": "ABCDE12345.com.example.app",
+              "paths": [
+                "NOT /wwdc/internal/*",
+                "/wwdc/*"
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/wwdc/internal/notes",
+      "expect": "exclude"
+    },
+    {
+      "name": "legacy/paths-unmatched",
+      "feature": "legacy-paths",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "aasa": {
+        "applinks": {
+          "apps": [],
+          "details": [
+            {
+              "appID": "ABCDE12345.com.example.app",
+              "paths": [
+                "NOT /wwdc/internal/*",
+                "/wwdc/*"
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/other",
+      "expect": "no_match"
+    },
+    {
+      "name": "legacy/details-as-dictionary",
+      "feature": "legacy-details",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "apps": [],
+          "details": {
+            "ABCDE12345.com.example.app": {
+              "paths": [
+                "/wwdc/news/"
+              ]
+            }
+          }
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/wwdc/news/",
+      "expect": "match",
+      "note": "The oldest association-file form; key order is undefined so it is evaluated sorted."
+    },
+    {
+      "name": "legacy/app-id-singular",
+      "feature": "appID",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appID": "ABCDE12345.com.example.app",
+              "components": [
+                {
+                  "/": "/x"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "match"
+    },
+    {
+      "name": "host/other-host-never-matches",
+      "feature": "host",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://evil.test/anything",
+      "expect": "no_match",
+      "note": "The file does not carry its own domain; the caller supplies it."
+    },
+    {
+      "name": "host/comparison-is-case-insensitive",
+      "feature": "host",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://EXAMPLE.COM/x",
+      "expect": "match"
+    },
+    {
+      "name": "host/empty-domain-skips-the-check",
+      "feature": "host",
+      "status": "decided",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://anywhere.test/x",
+      "expect": "match",
+      "note": "An empty domain means 'do not check the host'."
+    },
+    {
+      "name": "services/webcredentials-only-never-matches-urls",
+      "feature": "services",
+      "status": "documented",
+      "source": "https://developer.apple.com/documentation/bundleresources/applinks",
+      "aasa": {
+        "webcredentials": {
+          "apps": [
+            "ABCDE12345.com.example.app"
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "no_match"
+    }
+  ],
+  "validation": [
+    {
+      "name": "validation/detail-without-app-id",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "components": [
+                {
+                  "/": "/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA110"
+      ]
+    },
+    {
+      "name": "validation/both-app-id-forms",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appID": "A.b",
+              "appIDs": [
+                "A.c"
+              ],
+              "components": [
+                {
+                  "/": "/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA111"
+      ]
+    },
+    {
+      "name": "validation/mixed-components-and-paths",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appID": "A.b",
+              "components": [
+                {
+                  "/": "/a"
+                }
+              ],
+              "paths": [
+                "/b"
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA120"
+      ]
+    },
+    {
+      "name": "validation/legacy-apps-not-empty",
+      "aasa": {
+        "applinks": {
+          "apps": [
+            "A.b"
+          ],
+          "details": [
+            {
+              "appID": "A.b",
+              "components": [
+                {
+                  "/": "/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA122"
+      ]
+    },
+    {
+      "name": "validation/empty-app-id",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                ""
+              ],
+              "components": [
+                {
+                  "/": "/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA130"
+      ]
+    },
+    {
+      "name": "validation/recursive-substitution",
+      "aasa": {
+        "applinks": {
+          "substitutionVariables": {
+            "a": [
+              "$(b)"
+            ],
+            "b": [
+              "x"
+            ]
+          },
+          "details": []
+        }
+      },
+      "expectCodes": [
+        "AASA141"
+      ]
+    },
+    {
+      "name": "validation/undefined-substitution",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appID": "A.b",
+              "components": [
+                {
+                  "/": "/$(nope)"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA142"
+      ]
+    },
+    {
+      "name": "validation/unterminated-substitution",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appID": "A.b",
+              "components": [
+                {
+                  "/": "/$(oops"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA151"
+      ]
+    },
+    {
+      "name": "validation/non-string-query-predicate",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appID": "A.b",
+              "components": [
+                {
+                  "?": {
+                    "f": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA150"
+      ]
+    },
+    {
+      "name": "validation/catch-all-shadows-later-rule",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appID": "A.b",
+              "components": [
+                {
+                  "comment": "everything"
+                },
+                {
+                  "/": "/never/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA180",
+        "AASA190"
+      ]
+    },
+    {
+      "name": "validation/path-without-leading-slash",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appID": "A.b",
+              "components": [
+                {
+                  "/": "buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": [
+        "AASA191"
+      ]
+    },
+    {
+      "name": "validation/no-details",
+      "aasa": {
+        "applinks": {
+          "details": []
+        }
+      },
+      "expectCodes": [
+        "AASA193"
+      ]
+    },
+    {
+      "name": "validation/no-recognized-service",
+      "aasa": {},
+      "expectCodes": [
+        "AASA100"
+      ]
+    },
+    {
+      "name": "validation/clean-document-is-silent",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expectCodes": []
+    }
+  ]
+}
