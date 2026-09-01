@@ -34,7 +34,11 @@ fn char_eq(left: char, right: char, case_sensitive: bool) -> bool {
     }
 }
 
-fn str_eq(left: &str, right: &str, case_sensitive: bool) -> bool {
+/// Compares two strings under the same folding rules patterns use.
+///
+/// Shared with query-item name comparison so that `caseSensitive: false` means one thing across a
+/// rule rather than ASCII-only folding for names and full folding for values.
+pub(crate) fn str_eq(left: &str, right: &str, case_sensitive: bool) -> bool {
     if case_sensitive {
         return left == right;
     }

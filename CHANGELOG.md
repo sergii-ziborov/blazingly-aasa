@@ -30,6 +30,28 @@ not. `docs/competitors.md` is the full matrix; `tests/coverage.rs` is its execut
 - WebAssembly: `appsForUrl`, `servicesForBundle`, `appIdsForBundle`, `splitAppId`.
 - `docs/roadmap.md` records why there is no hand-written JavaScript port and no MCP server.
 
+### Fixed
+
+- A JSON document beginning with the digit `0` was reported as a CMS signing problem. The DER
+  SEQUENCE tag is `0x30`, which is also ASCII `0`, so sniffing the leading byte misread `0`, `0.5`,
+  and any invalid JSON starting with a zero. JSON is now attempted first, and the signed-file path
+  requires an actual `id-signedData` OID rather than a byte guess. A signed file whose payload is
+  not JSON now blames the payload rather than the envelope.
+- `caseSensitive: false` folded non-ASCII in pattern values but only ASCII in query item *names*.
+  Both now use the same folding, so the setting means one thing across a rule.
+- `tests/properties.rs` hard-coded `with_cases(400)`, which silently overrides `PROPTEST_CASES`.
+  A deep run therefore proved nothing. The count now reads the environment, and the reason is
+  written down next to it.
+
+### Verified
+
+- The bitset NFA — the engine used whenever a pattern carries a multi-character substitution set —
+  had no cross-check against a reference. It is now compared against expanding the alternatives by
+  hand and matching each expansion, which is exact because substitution values cannot nest.
+- 50,000-case property run across all twelve properties: matcher against the naive reference, NFA
+  against expansion, `decide` against `match_url`, `apps_for_url` against `decide`, and no panic on
+  arbitrary bytes or arbitrary URLs.
+
 ### Measured
 
 Scoring `universal-links-test` against the corpus: 52 of 70 applicable cases. It is solid on rule

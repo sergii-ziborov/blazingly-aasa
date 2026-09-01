@@ -20,6 +20,40 @@ fn reference_match(pattern: &[char], input: &[char]) -> bool {
     }
 }
 
+/// Expands `$(v)` into every alternative, producing a set of plain glob patterns.
+///
+/// Substitution values may themselves contain `?` and `*` but may not nest, so one round of
+/// expansion is exact. Matching the original is then "does any expansion match", which is a
+/// reference the bitset NFA can be checked against.
+fn expand(pattern: &str, values: &[&str]) -> Vec<String> {
+    let Some((before, rest)) = pattern.split_once("$(v)") else {
+        return vec![pattern.to_owned()];
+    };
+    let mut out = Vec::new();
+    for tail in expand(rest, values) {
+        for value in values {
+            out.push(format!("{before}{value}{tail}"));
+        }
+    }
+    out
+}
+
+fn matches_via_substitution(pattern: &str, values: &[&str], path: &str) -> bool {
+    let list = values
+        .iter()
+        .map(|value| format!("\"{value}\""))
+        .collect::<Vec<_>>()
+        .join(",");
+    let json = format!(
+        r#"{{"applinks":{{"substitutionVariables":{{"v":[{list}]}},
+        "details":[{{"appID":"A.b","components":[{{"/":"/{pattern}"}}]}}]}}}}"#
+    );
+    let aasa = CompiledAasa::parse(json.as_bytes()).expect("generated document should parse");
+    aasa.match_url("e.test", "A.b", &format!("https://e.test/{path}"))
+        .expect("generated URL should parse")
+        .is_match()
+}
+
 fn matches_via_crate(pattern: &str, path: &str) -> bool {
     let json = format!(
         r#"{{"applinks":{{"details":[{{"appID":"A.b","components":[{{"/":"/{pattern}"}}]}}]}}}}"#
@@ -30,8 +64,22 @@ fn matches_via_crate(pattern: &str, path: &str) -> bool {
         .is_match()
 }
 
+/// 400 cases by default; `PROPTEST_CASES=20000 cargo test --release --test properties` for a deep
+/// run. A hard-coded `with_cases` silently ignores the environment variable, which makes a
+/// "deep run" that proves nothing -- easy to do by accident, so it is spelled out here.
+fn config() -> ProptestConfig {
+    let cases = std::env::var("PROPTEST_CASES")
+        .ok()
+        .and_then(|value| value.parse().ok())
+        .unwrap_or(400);
+    ProptestConfig {
+        cases,
+        ..ProptestConfig::default()
+    }
+}
+
 proptest! {
-    #![proptest_config(ProptestConfig::with_cases(400))]
+    #![proptest_config(config())]
 
     /// The fast engine and the naive engine must never disagree.
     #[test]
@@ -45,6 +93,31 @@ proptest! {
         );
         prop_assert_eq!(matches_via_crate(&pattern, &input), expected,
             "pattern `/{}` against `/{}`", pattern, input);
+    }
+
+    /// The bitset NFA -- the engine used whenever a pattern carries a multi-character substitution
+    /// set -- must agree with expanding the alternatives by hand and matching each one.
+    #[test]
+    fn substitution_engine_agrees_with_expansion(
+        head in "[ab]{0,3}",
+        tail in "[ab*?]{0,3}",
+        values in proptest::collection::vec("[ab*?]{0,3}", 1..4),
+        input in "[ab]{0,8}",
+    ) {
+        let pattern = format!("{head}$(v){tail}");
+        let values: Vec<&str> = values.iter().map(String::as_str).collect();
+
+        let expected = expand(&format!("/{pattern}"), &values).iter().any(|concrete| {
+            reference_match(
+                &concrete.chars().collect::<Vec<_>>(),
+                &format!("/{input}").chars().collect::<Vec<_>>(),
+            )
+        });
+        prop_assert_eq!(
+            matches_via_substitution(&pattern, &values, &input),
+            expected,
+            "pattern `/{}` with {:?} against `/{}`", pattern, values, input
+        );
     }
 
     /// A pattern with no wildcards matches exactly one string: itself.

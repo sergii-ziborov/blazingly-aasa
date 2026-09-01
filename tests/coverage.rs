@@ -249,9 +249,48 @@ fn a_cms_signed_file_is_read_and_flagged() {
 
 #[test]
 fn a_der_blob_with_no_payload_says_so_rather_than_blaming_json() {
-    let error = CompiledAasa::parse(&[0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x02]).unwrap_err();
+    // A well-formed signedData envelope whose encapsulated content is missing.
+    const OID_SIGNED: &[u8] = &[0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02];
+    let mut inner = vec![0x06, 9];
+    inner.extend_from_slice(OID_SIGNED);
+    let mut der = vec![0x30, u8::try_from(inner.len()).unwrap()];
+    der.extend_from_slice(&inner);
+
+    let error = CompiledAasa::parse(&der).unwrap_err();
     assert!(
-        error.message().contains("CMS-signed"),
+        error.message().contains("signedData"),
+        "unhelpful message: {error}"
+    );
+}
+
+/// The DER SEQUENCE tag `0x30` is also the ASCII digit `0`, so sniffing on the leading byte alone
+/// reports a JSON document of `0` as a signing problem. JSON is tried first for exactly this
+/// reason.
+#[test]
+fn a_json_number_is_not_mistaken_for_a_signed_file() {
+    for input in ["0", "0.5", "  0  ", "01"] {
+        let error = CompiledAasa::parse(input.as_bytes()).unwrap_err();
+        assert!(
+            !error.message().contains("CMS-signed"),
+            "{input:?} was blamed on signing: {error}"
+        );
+    }
+    // A bare `0` is valid JSON, so the complaint should be about the root type.
+    assert_eq!(
+        CompiledAasa::parse(b"0").unwrap_err().kind(),
+        &blazingly_aasa::ParseErrorKind::RootNotObject
+    );
+}
+
+/// A signed file whose payload is not JSON must blame the payload, not the envelope.
+#[test]
+fn a_signed_file_with_a_broken_payload_says_which_part_is_broken() {
+    let signed = signed_fixture(b"{ this is not json");
+    let error = CompiledAasa::parse(&signed).unwrap_err();
+    assert!(
+        error
+            .message()
+            .contains("CMS-signed payload is not valid JSON"),
         "unhelpful message: {error}"
     );
 }

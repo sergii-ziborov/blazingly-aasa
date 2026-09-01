@@ -11,26 +11,39 @@
 
 /// `1.2.840.113549.1.7.1` — the CMS `id-data` content type, whose `eContent` holds the JSON.
 const OID_PKCS7_DATA: &[u8] = &[0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x01];
+/// `1.2.840.113549.1.7.2` — `id-signedData`, the outer `ContentInfo` content type.
+const OID_PKCS7_SIGNED_DATA: &[u8] = &[0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x07, 0x02];
 
 /// Tag *numbers*, i.e. the low five bits of an identifier octet, which is what `read` reports.
 const TAG_OCTET_STRING: u8 = 0x04;
 const TAG_OID: u8 = 0x06;
 const TAG_SEQUENCE: u8 = 0x10;
-/// The full identifier octet for a constructed SEQUENCE, used for sniffing and by the tests.
+/// The full identifier octet for a constructed SEQUENCE, used by the tests that build DER.
+#[cfg(test)]
 const DER_SEQUENCE_BYTE: u8 = 0x30;
 /// Nested `SignedData` is shallow in practice; this only guards against malicious nesting.
 const MAX_DEPTH: u8 = 24;
 
-/// Whether `bytes` look like DER rather than JSON.
+/// Whether `bytes` are a CMS `ContentInfo` carrying `id-signedData`.
 ///
-/// JSON documents start with `{` after optional whitespace; a DER `ContentInfo` starts with a
-/// SEQUENCE tag. That is enough to tell them apart without parsing either.
+/// This parses rather than sniffs, deliberately. The DER SEQUENCE tag `0x30` is also the ASCII
+/// digit `0`, so a leading-byte test reports a JSON document of `0` — or any invalid JSON starting
+/// with a digit zero — as a signing problem. Requiring the actual `signedData` OID makes the
+/// question unambiguous.
 #[must_use]
-pub(crate) fn looks_like_der(bytes: &[u8]) -> bool {
-    bytes
-        .iter()
-        .find(|byte| !byte.is_ascii_whitespace())
-        .is_some_and(|byte| *byte == DER_SEQUENCE_BYTE)
+pub(crate) fn is_signed_data(bytes: &[u8]) -> bool {
+    let Some(start) = bytes.iter().position(|byte| !byte.is_ascii_whitespace()) else {
+        return false;
+    };
+    let bytes = &bytes[start..];
+    let Some(outer) = read(bytes, 0) else {
+        return false;
+    };
+    if outer.tag != TAG_SEQUENCE || !outer.constructed {
+        return false;
+    }
+    read(outer.contents, 0)
+        .is_some_and(|first| first.tag == TAG_OID && first.contents == OID_PKCS7_SIGNED_DATA)
 }
 
 /// One DER element: its tag, its contents, and where the next element starts.
@@ -193,17 +206,25 @@ mod tests {
     }
 
     #[test]
-    fn json_is_not_mistaken_for_der() {
-        assert!(!looks_like_der(br#"{"applinks":{}}"#));
-        assert!(!looks_like_der(b"   \n{}"));
-        assert!(!looks_like_der(b""));
+    fn json_is_not_mistaken_for_signed_data() {
+        assert!(!is_signed_data(br#"{"applinks":{}}"#));
+        assert!(!is_signed_data(b"   \n{}"));
+        assert!(!is_signed_data(b""));
+        // `0` and `01` begin with 0x30, the SEQUENCE tag. Neither is a signed file.
+        assert!(!is_signed_data(b"0"));
+        assert!(!is_signed_data(b"01"));
+        assert!(!is_signed_data(b"0.5"));
+        // A SEQUENCE that is not a signedData ContentInfo.
+        assert!(!is_signed_data(&[
+            0x30, 0x06, 0x02, 0x01, 0x01, 0x02, 0x01, 0x02
+        ]));
     }
 
     #[test]
     fn a_signed_payload_round_trips() {
         let payload = br#"{"applinks":{"details":[]}}"#;
         let signed = wrap(payload);
-        assert!(looks_like_der(&signed));
+        assert!(is_signed_data(&signed));
         assert_eq!(extract_payload(&signed).as_deref(), Some(&payload[..]));
     }
 

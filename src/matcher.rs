@@ -16,7 +16,7 @@ use crate::explain::{
     RuleTrace, StopReason, UrlComponent,
 };
 use crate::model::EffectiveDefaults;
-use crate::pattern::{Pattern, Shape};
+use crate::pattern::{str_eq, Pattern, Shape};
 use crate::url::{percent_decode, UrlParts};
 
 /// Query items, either borrowed straight out of the URL or owned after percent-decoding.
@@ -401,12 +401,7 @@ fn query_item_matches(
 ) -> bool {
     for index in 0..items.len() {
         let (candidate, value) = items.get(index);
-        let same_name = if case_sensitive {
-            candidate == name
-        } else {
-            candidate.eq_ignore_ascii_case(name)
-        };
-        if same_name && pattern.matches_with(value, case_sensitive) {
+        if str_eq(candidate, name, case_sensitive) && pattern.matches_with(value, case_sensitive) {
             return true;
         }
     }
@@ -500,12 +495,7 @@ fn compare_query_item(
     let mut present: Vec<&str> = Vec::new();
     for index in 0..items.len() {
         let (candidate, value) = items.get(index);
-        let same_name = if effective.case_sensitive {
-            candidate == name
-        } else {
-            candidate.eq_ignore_ascii_case(name)
-        };
-        if same_name {
+        if str_eq(candidate, name, effective.case_sensitive) {
             present.push(value);
         }
     }

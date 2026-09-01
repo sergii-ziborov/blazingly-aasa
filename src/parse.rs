@@ -72,30 +72,38 @@ pub(crate) fn parse(bytes: &[u8], options: &ParseOptions) -> Result<AasaDocument
         ));
     }
 
-    // Association files served for iOS 9 are CMS-signed DER, not JSON. Recognise those and read
-    // the encapsulated payload rather than reporting a baffling syntax error at byte 0.
+    // Association files served for iOS 9 are CMS-signed DER rather than JSON. JSON is tried
+    // first, because the DER SEQUENCE tag 0x30 is also the ASCII digit `0` -- sniffing on the
+    // leading byte alone would report a document of `0` as a signing problem. A real DER blob
+    // fails JSON parsing immediately, so the fallback costs nothing.
     let mut signed = None;
-    let json = if crate::signed::looks_like_der(bytes) {
-        match crate::signed::extract_payload(bytes) {
-            Some(payload) => {
-                signed = Some(payload);
-                signed.as_deref().unwrap_or(bytes)
-            }
-            None => {
+    let value: Value = match blazingly_json::from_slice(bytes) {
+        Ok(value) => value,
+        Err(json_error) => {
+            if !crate::signed::is_signed_data(bytes) {
                 return Err(ParseError::new(
                     ParseErrorKind::Json,
-                    "payload begins with a DER SEQUENCE, so it looks like a CMS-signed \
-                     association file, but no encapsulated JSON content could be read from it"
-                        .to_owned(),
-                ))
+                    json_error.to_string(),
+                ));
             }
+            let Some(payload) = crate::signed::extract_payload(bytes) else {
+                return Err(ParseError::new(
+                    ParseErrorKind::Json,
+                    "this is a CMS signedData structure, as iOS 9 association files were, but no \
+                     encapsulated JSON content could be read from it"
+                        .to_owned(),
+                ));
+            };
+            let value = blazingly_json::from_slice(&payload).map_err(|error| {
+                ParseError::new(
+                    ParseErrorKind::Json,
+                    format!("the CMS-signed payload is not valid JSON: {error}"),
+                )
+            })?;
+            signed = Some(payload);
+            value
         }
-    } else {
-        bytes
     };
-
-    let value: Value = blazingly_json::from_slice(json)
-        .map_err(|error| ParseError::new(ParseErrorKind::Json, error.to_string()))?;
 
     let Value::Object(root) = value else {
         return Err(ParseError::new(
