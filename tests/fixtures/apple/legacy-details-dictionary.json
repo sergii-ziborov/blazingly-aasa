@@ -1,0 +1,8 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": {
+      "ABCDE12345.com.example.app": { "paths": [ "/wwdc/news/", "/videos/wwdc/2015/*" ] }
+    }
+  }
+}

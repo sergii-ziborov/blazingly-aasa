@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [ "ABCDE12345.com.example.app" ],
+        "components": [
+          { "/": "abc", "?": "def", "#": "*" }
+        ]
+      }
+    ]
+  }
+}

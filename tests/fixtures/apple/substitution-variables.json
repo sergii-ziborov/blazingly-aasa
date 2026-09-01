@@ -1,0 +1,13 @@
+{
+  "applinks": {
+    "substitutionVariables": {
+      "food": [ "burrito", "pizza", "sushi", "samosa" ]
+    },
+    "details": [{
+      "appIDs": [ "ABCDE12345.com.example.app" ],
+      "components": [
+        { "/" : "/$(lang)_$(region)/$(food)/" }
+      ]
+    }]
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "applinks": {
+    "details": [
+      { "appIDs": [ "ABCDE12345.com.example.app" ], "components": [ { "/": "/*" } ] }
+    ]
+  },
+  "webcredentials": { "apps": [ "ABCDE12345.com.example.app" ] },
+  "appclips": { "apps": [ "ABCDE12345.com.example.app.Clip" ] },
+  "activitycontinuation": { "apps": [ "ABCDE12345.com.example.app" ] }
+}

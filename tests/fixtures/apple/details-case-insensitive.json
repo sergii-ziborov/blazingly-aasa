@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [ "ABCDE12345.com.example.app", "ABCDE12345.com.example.app2" ],
+        "components": [
+          {
+            "/": "/buy/*",
+            "#": "my_great_product_123",
+            "comment": "Matches any URL whose path starts with /buy/ and fragment equals my_great_product_123, ignoring case"
+          }
+        ],
+        "defaults": { "caseSensitive": false }
+      }
+    ]
+  }
+}

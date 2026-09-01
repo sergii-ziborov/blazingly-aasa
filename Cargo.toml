@@ -1,0 +1,48 @@
+[package]
+name = "blazingly-aasa"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.78"
+license = "MIT"
+description = "Apple Associated Domains (apple-app-site-association) semantics: parse, validate, match, explain, and diff"
+repository = "https://github.com/sergii-ziborov/blazingly-aasa"
+documentation = "https://docs.rs/blazingly-aasa"
+readme = "README.md"
+keywords = ["aasa", "universal-links", "deeplink", "ios", "associated-domains"]
+categories = ["parser-implementations", "web-programming", "wasm"]
+exclude = ["/tests/fixtures/real-world/**", "/benches/**", "/.github/**"]
+
+[dependencies]
+blazingly-json = "0.1.5"
+serde = { version = "1.0.229", features = ["derive"] }
+
+[dev-dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+proptest = "1"
+regex = "1"
+serde_json = "1"
+
+[[bench]]
+name = "compile"
+harness = false
+
+[[bench]]
+name = "matching"
+harness = false
+
+[[bench]]
+name = "pattern_engine"
+harness = false
+
+[lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
