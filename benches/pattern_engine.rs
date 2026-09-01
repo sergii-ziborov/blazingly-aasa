@@ -11,7 +11,7 @@ mod support;
 
 use blazingly_aasa::WildcardPattern;
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
-use support::to_regex;
+use support::{expand_classes, to_regex};
 
 fn cases() -> Vec<(&'static str, String, String)> {
     vec![
@@ -41,6 +41,28 @@ fn cases() -> Vec<(&'static str, String, String)> {
             format!("{}*b", "*a".repeat(16)),
             "a".repeat(512),
         ),
+        (
+            "ascii_class",
+            "/id/$(digit)$(digit)$(digit)$(digit)".to_owned(),
+            "/id/4815".to_owned(),
+        ),
+    ]
+}
+
+/// Patterns whose substitution sets have no honest regex equivalent without pasting Foundation's
+/// ISO lists into the pattern by hand. Measured against this crate alone.
+fn substitution_cases() -> Vec<(&'static str, String, String)> {
+    vec![
+        (
+            "region_lang",
+            "/$(lang)_$(region)/*".to_owned(),
+            "/en_US/anything".to_owned(),
+        ),
+        (
+            "region_lang_miss",
+            "/$(lang)_$(region)/*".to_owned(),
+            "/qq_ZZ/anything".to_owned(),
+        ),
     ]
 }
 
@@ -48,7 +70,7 @@ fn matching(criterion: &mut Criterion) {
     let mut group = criterion.benchmark_group("pattern/match");
     for (name, pattern, input) in cases() {
         let ours = WildcardPattern::compile(&pattern, true).unwrap();
-        let theirs = to_regex(&pattern, true);
+        let theirs = to_regex(&expand_classes(&pattern), true);
 
         group.throughput(Throughput::Bytes(input.len() as u64));
         group.bench_with_input(
@@ -79,12 +101,34 @@ fn compiling(criterion: &mut Criterion) {
             BenchmarkId::new("regex", name),
             &pattern,
             |bencher, pattern| {
-                bencher.iter(|| black_box(to_regex(black_box(pattern), true)));
+                bencher.iter(|| black_box(to_regex(&expand_classes(black_box(pattern)), true)));
             },
         );
     }
     group.finish();
 }
 
-criterion_group!(benches, matching, compiling);
+/// Substitution sets, this crate only. See `substitution_cases`.
+fn substitutions(criterion: &mut Criterion) {
+    let mut group = criterion.benchmark_group("pattern/substitution");
+    for (name, pattern, input) in substitution_cases() {
+        let ours = WildcardPattern::compile(&pattern, true).unwrap();
+        group.throughput(Throughput::Bytes(input.len() as u64));
+        group.bench_with_input(BenchmarkId::new("match", name), &input, |bencher, input| {
+            bencher.iter(|| black_box(ours.matches(black_box(input))));
+        });
+        group.bench_with_input(
+            BenchmarkId::new("compile", name),
+            &pattern,
+            |bencher, pattern| {
+                bencher.iter(|| {
+                    black_box(WildcardPattern::compile(black_box(pattern), true).unwrap());
+                });
+            },
+        );
+    }
+    group.finish();
+}
+
+criterion_group!(benches, matching, compiling, substitutions);
 criterion_main!(benches);

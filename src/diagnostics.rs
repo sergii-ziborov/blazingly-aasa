@@ -94,7 +94,7 @@ diagnostic_codes! {
     LegacyDetailsDictionary => ("AASA121", Warning, "details uses the legacy dictionary form"),
     LegacyAppsKeyNonEmpty => ("AASA122", Warning, "legacy applinks.apps array is not empty"),
     EmptyAppIdentifier => ("AASA130", Error, "empty application identifier"),
-    SuspiciousAppIdentifier => ("AASA131", Warning, "application identifier is not in <TeamID>.<BundleID> form"),
+    SuspiciousAppIdentifier => ("AASA131", Warning, "application identifier is not in `<TeamID>.<BundleID>` form"),
     MalformedSubstitutionName => ("AASA140", Error, "substitution variable name contains $, ( or )"),
     RecursiveSubstitutionValue => ("AASA141", Error, "substitution value references another substitution variable"),
     UnknownSubstitutionVariable => ("AASA142", Error, "pattern references an undefined substitution variable"),

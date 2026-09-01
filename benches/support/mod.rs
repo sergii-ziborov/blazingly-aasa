@@ -35,19 +35,47 @@ struct RegexRule {
     exclude: bool,
 }
 
+/// Expands the predefined ASCII substitution classes into their regex equivalents.
+///
+/// `$(region)` and `$(lang)` are deliberately absent: expressing them as a regular expression
+/// means pasting in Foundation's ISO lists by hand, which nobody writing an AASA checker actually
+/// does. Those two are benchmarked against this crate alone, and labelled as such.
+pub fn expand_classes(pattern: &str) -> String {
+    pattern
+        .replace("$(alpha)", "[A-Za-z]")
+        .replace("$(upper)", "[A-Z]")
+        .replace("$(lower)", "[a-z]")
+        .replace("$(alnum)", "[A-Za-z0-9]")
+        .replace("$(digit)", "[0-9]")
+        .replace("$(xdigit)", "[0-9A-Fa-f]")
+}
+
 /// Translates an Apple wildcard pattern into an anchored regular expression.
+///
+/// A regex character class arrives pre-expanded by `expand_classes` and is passed through intact.
 pub fn to_regex(pattern: &str, case_sensitive: bool) -> Regex {
     let mut out = String::with_capacity(pattern.len() * 2 + 8);
     if !case_sensitive {
         out.push_str("(?i)");
     }
     out.push_str("(?s)^");
-    for character in pattern.chars() {
+    let mut chars = pattern.chars().peekable();
+    while let Some(character) = chars.next() {
         match character {
             '*' => out.push_str(".*"),
             '?' => out.push('.'),
+            // A pre-expanded character class such as `[0-9]` passes through unescaped.
+            '[' => {
+                out.push('[');
+                for inner in chars.by_ref() {
+                    out.push(inner);
+                    if inner == ']' {
+                        break;
+                    }
+                }
+            }
             other => {
-                if "\\.+()|[]{}^$#&-~".contains(other) {
+                if "\\.+()|{}^$#&-~".contains(other) {
                     out.push('\\');
                 }
                 out.push(other);
@@ -224,7 +252,7 @@ pub fn urls() -> Vec<String> {
         "https://example.com/section0/private/secret".to_owned(),
         "https://example.com/help2/topic?articleNumber=4815".to_owned(),
         "https://example.com/help2/topic?articleNumber=481".to_owned(),
-        "https://example.com/catalog3/pizza/margherita".to_owned(),
+        "https://example.com/catalog3/pizza/details".to_owned(),
         "https://example.com/item4/x?ref=email".to_owned(),
         "https://example.com/nothing/here".to_owned(),
         "https://example.com/".to_owned(),

@@ -44,7 +44,8 @@ fn to_js<T: serde::Serialize + ?Sized>(value: &T) -> Result<JsValue, JsError> {
 
 /// A parsed and compiled association file.
 ///
-/// Call [`Aasa::free`] when finished; the handle owns memory inside the WebAssembly instance.
+/// Call `free()` from JavaScript when finished; the handle owns memory inside the
+/// WebAssembly instance.
 #[wasm_bindgen]
 pub struct Aasa {
     inner: CompiledAasa,
@@ -127,6 +128,9 @@ impl Aasa {
     /// discard the rest of the batch.
     #[wasm_bindgen(js_name = decideMany)]
     #[must_use]
+    // wasm-bindgen marshals a JavaScript `string[]` into an owned `Vec<String>`; a slice
+    // is not an option here.
+    #[allow(clippy::needless_pass_by_value)]
     pub fn decide_many(&self, app_id: &str, urls: Vec<String>) -> Vec<String> {
         urls.iter()
             .map(|url| {
@@ -144,6 +148,9 @@ impl Aasa {
     /// array of JavaScript strings.
     #[wasm_bindgen(js_name = decideManyCodes)]
     #[must_use]
+    // wasm-bindgen marshals a JavaScript `string[]` into an owned `Vec<String>`; a slice
+    // is not an option here.
+    #[allow(clippy::needless_pass_by_value)]
     pub fn decide_many_codes(&self, app_id: &str, urls: Vec<String>) -> Vec<u8> {
         urls.iter()
             .map(|url| match self.inner.decide(&self.domain, app_id, url) {
