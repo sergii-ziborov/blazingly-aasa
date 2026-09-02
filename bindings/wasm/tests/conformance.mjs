@@ -18,7 +18,7 @@ const root = join(here, "..", "..", "..");
 const { Aasa } = await import(join(here, "..", "pkg-node", "blazingly_aasa.js"));
 
 const corpus = JSON.parse(readFileSync(join(root, "conformance", "cases.json"), "utf8"));
-if (corpus.version !== 1) throw new Error(`unexpected corpus version ${corpus.version}`);
+if (corpus.version !== 2) throw new Error(`unexpected corpus version ${corpus.version}`);
 
 const runtime = typeof Bun === "undefined" ? `node ${process.version}` : `bun ${Bun.version}`;
 console.log(`conformance: ${corpus.matching.length} matching + ${corpus.validation.length} validation cases (${runtime})`);

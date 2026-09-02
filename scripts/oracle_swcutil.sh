@@ -7,7 +7,14 @@
 # it. Everything it settles should be promoted into tests/fixtures with a line in docs/parity.md,
 # so Linux and Windows CI can replay the conclusion without the tool.
 #
-# Reference: Apple TN3155, "Debugging universal links" — `swcutil verify -d <domain> -j <file>`.
+# Two subcommands matter:
+#   swcutil verify -d <domain> -j <file> [-u <url>]   whole document, optionally matching a URL
+#   swcutil match -u <url> -j <dict>                  one pattern dictionary against one URL
+#
+# The second is the useful one for settling semantics: no document structure or app identifiers in
+# the way, one question per run. Results from 2026-09-02 are committed in conformance/oracle.
+#
+# Reference: Apple TN3155, "Debugging universal links".
 set -uo pipefail
 cd "$(dirname "$0")/.."
 

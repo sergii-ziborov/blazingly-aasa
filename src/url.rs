@@ -171,6 +171,57 @@ fn split_host_port(host_port: &str) -> Result<(&str, Option<&str>), UrlError> {
     }
 }
 
+/// The forms of a URL path a `/` pattern may be compared against.
+///
+/// Two things are insignificant at the ends of a path, both confirmed against `swcutil`:
+///
+/// * a trailing run of slashes — `/buy` and `/buy//` are the same path;
+/// * the leading slash — a pattern of `abc` matches `/abc`.
+///
+/// Note what is *not* here: this does not add a trailing slash. An earlier version did, and it
+/// made `/id/????` match `/id/481`, because `481/` is four characters. `swcutil` says that does
+/// not match, and the conformance corpus caught it.
+#[must_use]
+pub fn path_forms(path: &str) -> Vec<String> {
+    let trimmed = path.trim_end_matches('/');
+    let base = if trimmed.is_empty() { "/" } else { trimmed };
+    match base.strip_prefix('/') {
+        Some(rest) if !rest.is_empty() => vec![base.to_owned(), rest.to_owned()],
+        _ => vec![base.to_owned()],
+    }
+}
+
+/// The forms a `/` pattern itself takes.
+///
+/// A leading run of slashes collapses to one, a trailing run is dropped, and a pattern ending in
+/// `/*` additionally matches the path without that segment: `swcutil` matches `/buy/*` against
+/// `/buy`, which is what an author writing `/buy/*` almost always means.
+#[must_use]
+pub(crate) fn path_pattern_forms(pattern: &str) -> Vec<String> {
+    let leading = pattern.starts_with('/');
+    let core = pattern.trim_start_matches('/');
+    let mut base = if leading {
+        format!("/{core}")
+    } else {
+        core.to_owned()
+    };
+    // Keep a lone "/" rather than trimming it away to nothing.
+    let trimmed = base.trim_end_matches('/');
+    base = if trimmed.is_empty() && base.starts_with('/') {
+        "/".to_owned()
+    } else {
+        trimmed.to_owned()
+    };
+
+    let mut forms = vec![base.clone()];
+    if let Some(prefix) = base.strip_suffix("/*") {
+        if !prefix.is_empty() {
+            forms.push(prefix.to_owned());
+        }
+    }
+    forms
+}
+
 /// Percent-decodes `input`, leaving invalid escapes untouched.
 ///
 /// Decoded bytes that do not form valid UTF-8 are replaced with `U+FFFD` rather than failing,

@@ -5,6 +5,44 @@ All notable changes to this project are documented here. This project adheres to
 
 ## [Unreleased]
 
+### Verified against Apple's swcutil
+
+`swcutil` requires root for every subcommand, so it had never been run. It has now been, and the
+raw output is committed in `conformance/oracle` so the conclusions are auditable without a Mac.
+
+**139 of 140 matching cases are oracle-verified.** The remaining one is this crate's own API
+convention — an empty domain skips the host check — which `swcutil` cannot express.
+
+The first run agreed on 68 of 73 cases. One disagreement was a harness artifact. **The other four
+were this crate being wrong**, and 67 targeted probes against `swcutil match` pinned down exactly
+what Apple does.
+
+### Fixed as a result
+
+- **A path pattern without a leading slash matches.** `abc` matches `/abc`; `buy/*` matches
+  `/buy/42`. Apple's reference uses a bare `abc` in one example and this crate had read it as a
+  documentation slip, going as far as shipping `AASA191` to warn about it. The lint was wrong.
+  It is removed and its number retired — a code never changes meaning — and the Apple example it
+  contradicted is now asserted in full, positive case included.
+- **Trailing slashes are insignificant.** `/buy/*` matches `/buy`, `/buy` matches `/buy/`, and a
+  leading run of slashes in a pattern collapses. The obvious implementation of this is wrong: also
+  trying the path with a slash appended makes `/id/????` match `/id/481`, since `481/` is four
+  characters. `swcutil` says no, and the conformance corpus caught it before it shipped.
+- **A missing query item counts as present with an empty value.** `{"b": "*"}` matches a URL with
+  no `b`; `{"b": "?*"}` does not.
+- **Every occurrence of a repeated query name must match**, not any one of them. `{"id": "42"}`
+  does not match `?id=7&id=42` in any position, while `{"id": "7"}` matches `?id=7&id=7`. The
+  previous behaviour was the most permissive of three plausible readings and the wrong one.
+- **A non-string query predicate discards the whole dictionary.** `{"a": "1", "flag": true}`
+  matches `?a=2`. This crate previously made such a predicate never match, on the principle of
+  refusing rather than guessing — the wrong direction, since Apple is more permissive here, so the
+  cautious-looking choice produced false negatives. `AASA150` stays an error and now documents what
+  it actually costs.
+
+Every `percentEncoded` behaviour was confirmed unchanged, including the one case that distinguishes
+the two possible readings of Apple's single sentence about it. That was the least certain area of
+the crate; it is now the best evidenced.
+
 ### Added
 
 Read the published source of every AASA tool with real usage (`chayev/yurl`,
@@ -23,7 +61,7 @@ not. `docs/competitors.md` is the full matrix; `tests/coverage.rs` is its execut
   JavaScript tool reports them as invalid JSON at byte 0. The DER is walked with no dependencies,
   the payload extracted, and `AASA200` reports in as many words that the signature was **not**
   verified — reading is not checking.
-- `conformance/cases.json`: 73 matching and 14 validation cases, each tagged with its feature, a
+- `conformance/cases.json`: 140 matching and 13 validation cases, each tagged with its feature, a
   source link, and whether Apple documents the behaviour or this crate decided it. Run by the Rust
   suite and the WebAssembly suite, and published so other implementations can be held to it —
   `conformance/run-third-party.mjs` points it at anyone else's library.

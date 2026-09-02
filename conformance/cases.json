@@ -1,9 +1,10 @@
 {
-  "version": 1,
+  "version": 2,
   "description": "Conformance cases for apple-app-site-association semantics. Any implementation claiming to evaluate AASA should pass all of them.",
   "statuses": {
     "documented": "Apple's reference states this behaviour.",
-    "decided": "Apple does not state it; blazingly-aasa chose a reading. See docs/parity.md."
+    "decided": "Apple does not state it; blazingly-aasa chose a reading. See docs/parity.md.",
+    "oracle": "Checked against Apple's swcutil and recorded in conformance/oracle. The strongest evidence available short of shipping an app."
   },
   "decisions": [
     "match",
@@ -14,7 +15,7 @@
     {
       "name": "apple/overview/buy-matches",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -50,12 +51,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/buy/42",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/earlier-exclude-wins",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -91,12 +93,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/buy/42#no_universal_links",
-      "expect": "exclude"
+      "expect": "exclude",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/specific-exclude-before-general",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -132,12 +135,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/help/website/faq?articleNumber=4815",
-      "expect": "exclude"
+      "expect": "exclude",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/query-four-chars",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -173,12 +177,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/help/123?articleNumber=4815",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/query-three-chars",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -214,12 +219,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/help/123?articleNumber=481",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/query-five-chars",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -255,12 +261,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/help/123?articleNumber=48159",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/query-item-absent",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -296,12 +303,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/help/123",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/unmatched-path",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -337,12 +345,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/elsewhere",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/second-app-id-also-matches",
       "feature": "appIDs",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -378,12 +387,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app2",
       "url": "https://example.com/buy/42",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/overview/unlisted-app-never-matches",
       "feature": "appIDs",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -419,12 +429,13 @@
       "domain": "example.com",
       "appId": "ZZZZZ99999.com.other.app",
       "url": "https://example.com/buy/42",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/components/all-specified-must-match",
       "feature": "components",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -447,12 +458,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/abc?def",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/components/missing-query-fails",
       "feature": "components",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -476,12 +488,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/abc",
       "expect": "no_match",
-      "note": "Apple states this URL does not match."
+      "note": "Apple states this URL does not match.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "apple/components/missing-path-fails",
       "feature": "components",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -505,12 +518,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com?def",
       "expect": "no_match",
-      "note": "Apple states this URL does not match."
+      "note": "Apple states this URL does not match.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "defaults/unspecified-path-matches-anything",
       "feature": "component-defaults",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -531,12 +545,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a/b?c=d#promo",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "defaults/absent-fragment-matches-star",
       "feature": "component-defaults",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -560,12 +575,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a",
       "expect": "match",
-      "note": "Apple's own example relies on `#: *` matching a URL with no fragment."
+      "note": "Apple's own example relies on `#: *` matching a URL with no fragment.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "defaults/absent-fragment-fails-question-star",
       "feature": "wildcards",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -587,12 +603,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "wildcards/star-matches-empty",
       "feature": "wildcards",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -613,12 +630,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/buy/",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "wildcards/star-crosses-slashes",
       "feature": "wildcards",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -639,12 +657,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/buy/42/x",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "wildcards/star-needs-the-literal-prefix",
       "feature": "wildcards",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -665,12 +684,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/buy",
-      "expect": "no_match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "wildcards/question-exact-count",
       "feature": "wildcards",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -691,12 +711,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/4815",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "wildcards/question-too-few",
       "feature": "wildcards",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -717,12 +738,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/481",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "wildcards/question-star-needs-one",
       "feature": "wildcards",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -743,12 +765,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a/",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "wildcards/question-star-one-is-enough",
       "feature": "wildcards",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -769,12 +792,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a/b",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "order/exclude-first-blocks",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -799,12 +823,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a/private/x",
-      "expect": "exclude"
+      "expect": "exclude",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "order/general-rule-still-matches",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -829,12 +854,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a/public",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "order/reversed-makes-exclude-unreachable",
       "feature": "rule-order",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -860,12 +886,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a/private/x",
       "expect": "match",
-      "note": "First match wins, so the later exclude never runs."
+      "note": "First match wins, so the later exclude never runs.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "defaults/rule-overrides-app",
       "feature": "defaults-hierarchy",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/defaults-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -896,12 +923,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/loose/1",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "defaults/app-overrides-domain",
       "feature": "defaults-hierarchy",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/defaults-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -932,12 +960,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/strict/1",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "defaults/app-level-exact-case-matches",
       "feature": "defaults-hierarchy",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/defaults-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -968,12 +997,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/Strict/1",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "defaults/case-sensitive-is-true-by-default",
       "feature": "case-sensitivity",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -994,12 +1024,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/help/1",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "query/whole-string-must-match-entirely",
       "feature": "query",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1020,12 +1051,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x?a=1",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "query/whole-string-rejects-extra-items",
       "feature": "query",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1046,12 +1078,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x?a=1&b=2",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "query/dictionary-ignores-unnamed-items",
       "feature": "query",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1074,12 +1107,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x?a=1&b=2",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "query/dictionary-requires-named-item",
       "feature": "query",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1102,12 +1136,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x?b=2",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "query/all-named-predicates-must-hold",
       "feature": "query",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1131,12 +1166,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x?a=1",
-      "expect": "no_match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "query/item-without-equals-is-empty",
       "feature": "query",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1160,12 +1196,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x?flag",
       "expect": "match",
-      "note": "Apple does not document valueless query items."
+      "note": "Apple does not document valueless query items.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "query/repeated-name-matches-any-occurrence",
       "feature": "query",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1188,13 +1225,14 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x?id=7&id=42",
-      "expect": "match",
-      "note": "Apple does not document which occurrence wins."
+      "expect": "no_match",
+      "note": "Apple does not document which occurrence wins.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "query/non-string-predicate-never-matches",
       "feature": "query",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1217,13 +1255,14 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x?flag=1",
-      "expect": "no_match",
-      "note": "Apple documents only string patterns here."
+      "expect": "match",
+      "note": "Apple documents only string patterns here.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "encoding/default-compares-encoded-url",
       "feature": "percent-encoding",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1245,12 +1284,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a%20b",
       "expect": "match",
-      "note": "Apple says only that percentEncoded indicates 'whether URLs are percent-encoded'. This crate reads the default as comparing the pattern against the URL component exactly as written."
+      "note": "Apple says only that percentEncoded indicates 'whether URLs are percent-encoded'. This crate reads the default as comparing the pattern against the URL component exactly as written.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "encoding/default-rejects-decoded-pattern",
       "feature": "percent-encoding",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1272,12 +1312,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a%20b",
       "expect": "no_match",
-      "note": "The corollary of the default: a pattern written with literal characters does not match an encoded URL unless percentEncoded is turned off."
+      "note": "The corollary of the default: a pattern written with literal characters does not match an encoded URL unless percentEncoded is turned off.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "encoding/false-decodes-the-url",
       "feature": "percent-encoding",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1300,12 +1341,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a%20b",
       "expect": "match",
-      "note": "With percentEncoded false this crate decodes the URL rather than encoding the pattern, because encoding a pattern containing * and ? is not well defined."
+      "note": "With percentEncoded false this crate decodes the URL rather than encoding the pattern, because encoding a pattern containing * and ? is not well defined.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "encoding/encoded-slash-is-not-a-separator",
       "feature": "percent-encoding",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1327,12 +1369,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a%2Fb",
       "expect": "no_match",
-      "note": "%2F stays encoded under the default, so a rule written as /a/b does not accept /a%2Fb. This is the security-relevant half of the percentEncoded choice."
+      "note": "%2F stays encoded under the default, so a rule written as /a/b does not accept /a%2Fb. This is the security-relevant half of the percentEncoded choice.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "encoding/decoding-erases-the-slash-distinction",
       "feature": "percent-encoding",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1355,12 +1398,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/a%2Fb",
       "expect": "match",
-      "note": "The other half: turning decoding on makes /a%2Fb indistinguishable from /a/b. Worth knowing before setting percentEncoded false on a rule that guards something."
+      "note": "The other half: turning decoding on makes /a%2Fb indistinguishable from /a/b. Worth knowing before setting percentEncoded false on a rule that guards something.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "encoding/non-ascii-decoded",
       "feature": "percent-encoding",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary/components-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1383,12 +1427,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/caf%C3%A9/menu",
       "expect": "match",
-      "note": "Decoding lets a pattern contain literal non-ASCII text, which is the main reason to set percentEncoded false at all."
+      "note": "Decoding lets a pattern contain literal non-ASCII text, which is the main reason to set percentEncoded false at all.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/apple-reference-example",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1417,12 +1462,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/en_US/pizza/",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/unlisted-value-fails",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1451,12 +1497,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/en_US/tacos/",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/unknown-locale-fails",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1485,12 +1532,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/qq_ZZ/pizza/",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/literal-text-is-not-the-variable",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1520,12 +1568,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/en_US/$(food)/",
       "expect": "no_match",
-      "note": "A pattern of $(food) must not compare as the literal text $(food)."
+      "note": "A pattern of $(food) must not compare as the literal text $(food).",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/region-uses-iso-not-prose",
       "feature": "substitutions",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1547,12 +1596,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/GB/home",
       "expect": "match",
-      "note": "$(region) is generated from Foundation's isoRegionCodes rather than transcribed, so the list Apple points at wins over the examples in Apple's prose."
+      "note": "$(region) is generated from Foundation's isoRegionCodes rather than transcribed, so the list Apple points at wins over the examples in Apple's prose.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/region-rejects-uk",
       "feature": "substitutions",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1574,12 +1624,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/UK/home",
       "expect": "no_match",
-      "note": "Apple's prose lists UK, but isoRegionCodes contains GB and not UK."
+      "note": "Apple's prose lists UK, but isoRegionCodes contains GB and not UK.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-digit-accepts",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1600,12 +1651,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/7",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-digit-rejects",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1626,12 +1678,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/x",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-alpha-accepts",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1652,12 +1705,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/q",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-alpha-rejects",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1678,12 +1732,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/7",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-upper-accepts",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1704,12 +1759,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/Q",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-upper-rejects",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1730,12 +1786,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/q",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-lower-accepts",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1756,12 +1813,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/q",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-lower-rejects",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1782,12 +1840,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/Q",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-alnum-accepts",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1808,12 +1867,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/7",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-alnum-rejects",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1834,12 +1894,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/-",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-xdigit-accepts",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1860,12 +1921,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/f",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-xdigit-rejects",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1886,12 +1948,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/g",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/class-folds-when-case-insensitive",
       "feature": "substitutions",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1914,12 +1977,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/id/q",
       "expect": "match",
-      "note": "Predefined variables are lists of strings, so folding applies to them too."
+      "note": "Predefined variables are lists of strings, so folding applies to them too.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "substitution/values-may-contain-wildcards",
       "feature": "substitutions",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/substitutionvariables-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -1945,12 +2009,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/abcz/x",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "legacy/paths-positive",
       "feature": "legacy-paths",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
       "aasa": {
         "applinks": {
@@ -1969,12 +2034,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/wwdc/2015",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "legacy/paths-not-exclusion",
       "feature": "legacy-paths",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
       "aasa": {
         "applinks": {
@@ -1993,12 +2059,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/wwdc/internal/notes",
-      "expect": "exclude"
+      "expect": "exclude",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "legacy/paths-unmatched",
       "feature": "legacy-paths",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
       "aasa": {
         "applinks": {
@@ -2017,12 +2084,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/other",
-      "expect": "no_match"
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "legacy/details-as-dictionary",
       "feature": "legacy-details",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -2040,12 +2108,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/wwdc/news/",
       "expect": "match",
-      "note": "The oldest association-file form; key order is undefined so it is evaluated sorted."
+      "note": "The oldest association-file form; key order is undefined so it is evaluated sorted.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "legacy/app-id-singular",
       "feature": "appID",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks/details-swift.dictionary",
       "aasa": {
         "applinks": {
@@ -2064,12 +2133,13 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://example.com/x",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "host/other-host-never-matches",
       "feature": "host",
-      "status": "decided",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -2091,12 +2161,13 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://evil.test/anything",
       "expect": "no_match",
-      "note": "The file does not carry its own domain; the caller supplies it."
+      "note": "The file does not carry its own domain; the caller supplies it.",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "host/comparison-is-case-insensitive",
       "feature": "host",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "applinks": {
@@ -2117,7 +2188,8 @@
       "domain": "example.com",
       "appId": "ABCDE12345.com.example.app",
       "url": "https://EXAMPLE.COM/x",
-      "expect": "match"
+      "expect": "match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
     },
     {
       "name": "host/empty-domain-skips-the-check",
@@ -2144,17 +2216,1888 @@
       "appId": "ABCDE12345.com.example.app",
       "url": "https://anywhere.test/x",
       "expect": "match",
-      "note": "An empty domain means 'do not check the host'."
+      "note": "An empty domain means 'do not check the host'. That is this crate's API, not an Apple behaviour: swcutil requires -d, so the oracle cannot speak to it."
     },
     {
       "name": "services/webcredentials-only-never-matches-urls",
       "feature": "services",
-      "status": "documented",
+      "status": "oracle",
       "source": "https://developer.apple.com/documentation/bundleresources/applinks",
       "aasa": {
         "webcredentials": {
           "apps": [
             "ABCDE12345.com.example.app"
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "no_match",
+      "oracle": "swcutil, macOS 27.0 (26A5388g), 2026-09-02"
+    },
+    {
+      "name": "oracle/trailing-star/buy-star-vs-no-slash",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trailing-star/buy-star-vs-slash",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy/",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trailing-star/buy-star-vs-child",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy/42",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trailing-star/buy-star-vs-sibling",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buyer",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/trailing-star/buy-star-vs-prefix",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/bu",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/trailing-star/deep-star-vs-no-slash",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/b/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/b",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trailing-star/star-no-slash-vs-plain",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trailing-star/mid-star-vs-no-slash",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/*/c"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/c",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/trailing-star/exact-no-star",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trailing-star/exact-vs-trailing-slash",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy/",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/leading-slash/bare-abc-vs-slash-abc",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "abc"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/abc",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/leading-slash/apple-doc-example",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "abc",
+                  "?": "def",
+                  "#": "*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/abc?def",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/leading-slash/bare-buy-star",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy/42",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-missing/star-on-absent-item",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "b": "*"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-missing/question-star-on-absent",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "b": "?*"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/query-missing/empty-pattern-on-absent",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "b": ""
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-missing/literal-on-absent",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "b": "1"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/query-missing/star-on-empty-query",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "b": "*"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-missing/two-items-one-absent",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "a": "1",
+                    "b": "*"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-repeat/target-is-first",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "42"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=42&id=7",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/query-repeat/target-is-last",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "42"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=7&id=42",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/query-repeat/target-is-middle",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "42"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=7&id=42&id=9",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/query-nonstring/bool-true-value-present",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "flag": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?flag=1",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-nonstring/bool-true-item-absent",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "flag": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?other=1",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-nonstring/bool-false-value-present",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "flag": false
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?flag=1",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-nonstring/number-predicate",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "n": 5
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?n=5",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-nonstring/null-predicate",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "n": null
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?n=5",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/percent/default-encoded-space",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a%20b"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%20b",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/percent/default-literal-space",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a b"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%20b",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/percent/false-literal-space",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a b",
+                  "percentEncoded": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%20b",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/percent/false-encoded-pattern",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a%20b",
+                  "percentEncoded": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%20b",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/percent/encoded-slash-default",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/b"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%2Fb",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/percent/encoded-slash-decoded",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/b",
+                  "percentEncoded": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a%2Fb",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/percent/hex-case-default",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/caf%C3%A9"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/caf%c3%a9",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/percent/unicode-literal-false",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/café",
+                  "percentEncoded": false
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/caf%C3%A9",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/percent/unicode-literal-default",
+      "feature": "percent-encoding",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/café"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/caf%C3%A9",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/fragment/star-on-absent-fragment",
+      "feature": "component-defaults",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "#": "*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/fragment/question-star-on-absent",
+      "feature": "component-defaults",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "#": "?*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/fragment/empty-on-absent",
+      "feature": "component-defaults",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "#": ""
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-whole/whole-exact",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": "a=1"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-whole/whole-rejects-extra",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": "a=1"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1&b=2",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/query-whole/whole-star-on-empty",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": "*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/query-whole/whole-question-star-on-empty",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": "?*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/lead/bare-abc-vs-abcd",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "abc"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/abcd",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/lead/bare-abc-vs-xabc",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "abc"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/xabc",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/lead/bare-abc-star",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "abc/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/abc",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/lead/bare-star-abc",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "*abc"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/xabc",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/lead/double-slash-pattern",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "//abc"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/abc",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/lead/bare-deep",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "a/b"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/b",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trail/pattern-trailing-slash",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trail/deep-pattern-trailing",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/a/b/"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/a/b",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trail/double-trailing-url",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/*"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy//",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trail/star-vs-double-slash",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/buy/"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/buy//",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trail/root-pattern",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/trail/root-pattern-vs-empty",
+      "feature": "path-slashes",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "/": "/"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/dup/star-on-duplicate",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "*"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=7&id=42",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/dup/joined-forward",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "7,42"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=7&id=42",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/dup/joined-reverse",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "42,7"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=42&id=7",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/dup/empty-on-duplicate",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": ""
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=7&id=42",
+      "expect": "no_match"
+    },
+    {
+      "name": "oracle/dup/question-star-on-dup",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "?*"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=7&id=42",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/dup/identical-duplicates",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "id": "7"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?id=7&id=7",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/nonstr/string-still-applies",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "a": "1",
+                    "flag": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=2",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/nonstr/string-passes-with-bool",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "a": "1",
+                    "flag": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=1",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/nonstr/array-predicate",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "a": [
+                      "1"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=2",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/nonstr/object-predicate",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": {
+                    "a": {
+                      "b": "1"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x?a=2",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/whole/empty-pattern-no-query",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": ""
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "domain": "example.com",
+      "appId": "ABCDE12345.com.example.app",
+      "url": "https://example.com/x",
+      "expect": "match"
+    },
+    {
+      "name": "oracle/whole/literal-vs-no-query",
+      "feature": "query",
+      "status": "oracle",
+      "source": "https://developer.apple.com/documentation/technotes/tn3155-debugging-universal-links",
+      "oracle": "swcutil match, macOS 27.0 (26A5388g), 2026-09-02",
+      "aasa": {
+        "applinks": {
+          "details": [
+            {
+              "appIDs": [
+                "ABCDE12345.com.example.app"
+              ],
+              "components": [
+                {
+                  "?": "a=1"
+                }
+              ]
+            }
           ]
         }
       },
@@ -2378,26 +4321,6 @@
       "expectCodes": [
         "AASA180",
         "AASA190"
-      ]
-    },
-    {
-      "name": "validation/path-without-leading-slash",
-      "aasa": {
-        "applinks": {
-          "details": [
-            {
-              "appID": "A.b",
-              "components": [
-                {
-                  "/": "buy/*"
-                }
-              ]
-            }
-          ]
-        }
-      },
-      "expectCodes": [
-        "AASA191"
       ]
     },
     {

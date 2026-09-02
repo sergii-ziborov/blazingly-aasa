@@ -77,6 +77,21 @@ reference. A pattern must match the **whole** component, not a prefix of it.
 
 `?` counts characters, not bytes: `/?/ ` matches `/é/` and not `/éé/`.
 
+### Slashes at the ends of a path
+
+Two things are insignificant, both confirmed against `swcutil`:
+
+* **A trailing run of slashes.** `/buy` and `/buy//` are the same path, and a pattern of `/buy/`
+  matches `/buy`.
+* **The leading slash of a pattern.** `abc` matches `/abc`, and `buy/*` matches `/buy/42`. Apple's
+  own reference uses a bare `abc` in one example, and it is correct.
+
+A pattern ending in `/*` additionally matches the path without that segment, so `/buy/*` matches
+`/buy` as well as `/buy/42` — which is what an author writing `/buy/*` almost always means.
+
+What does *not* happen is a trailing slash being **added** to the path. `/id/????` does not match
+`/id/481`, even though `481/` is four characters.
+
 ### How they are matched
 
 Patterns are compiled, not translated into a regular expression. Three engines, chosen at compile
@@ -193,12 +208,16 @@ matches `?a=1` and not `?a=1&b=2` — the pattern has to cover the entire query 
 Every named predicate must hold; unnamed items are ignored. So this matches
 `?articleNumber=4815&utm_source=x` but not `?articleNumber=481`.
 
-Details this crate settled, none of which Apple documents:
+Three details Apple documents nowhere, all settled by `swcutil` rather than by reasoning:
 
-* An item written without `=` (`?flag`) has an empty value, so `{"flag": ""}` matches it.
-* If a name repeats (`?id=7&id=42`), the predicate holds when **any** occurrence matches.
-* A predicate that is not a string — `{"flag": true}` — is reported as `AASA150` and never
-  matches, rather than being guessed at.
+* **A missing item counts as present with an empty value.** `{"b": "*"}` matches a URL with no `b`
+  at all; `{"b": "?*"}` does not, because it needs at least one character. An item written without
+  `=` (`?flag`) likewise has an empty value.
+* **Every occurrence of a repeated name must match.** `{"id": "42"}` does not match `?id=7&id=42`
+  in any position, while `{"id": "7"}` does match `?id=7&id=7`.
+* **A non-string predicate discards the entire dictionary.** `{"a": "1", "flag": true}` matches
+  `?a=2`, because the single bad entry makes the system ignore every constraint beside it. This is
+  reported as `AASA150`, an error, precisely because of how much it silently opens up.
 
 ## Percent encoding
 
@@ -217,7 +236,10 @@ knowing before you set `"percentEncoded": false` on a rule that guards something
 
 Invalid escapes are left as written rather than dropped, so `/100%zz` still matches itself.
 
-This is the least certain area of the crate. See `parity.md`.
+Both readings of Apple's one sentence agree on ordinary input and disagree on one case:
+`{"/": "/a%20b", "percentEncoded": false}` against `/a%20b`. Decoding the URL yields `/a b`, which
+the still-encoded pattern does not match; encoding the pattern would match. `swcutil` does not
+match, so the reading above is confirmed rather than argued. See `parity.md`.
 
 ## Legacy formats
 

@@ -126,7 +126,7 @@ pub use model::{
     MatchDefaults, QueryPredicate, QueryRule, DEFAULT_CASE_SENSITIVE, DEFAULT_PERCENT_ENCODED,
 };
 pub use parse::ParseOptions;
-pub use url::{percent_decode, UrlParts};
+pub use url::{path_forms, percent_decode, UrlParts};
 pub use wildcard::{PatternSyntaxError, WildcardPattern};
 
 /// The Foundation release the `$(region)` and `$(lang)` tables were generated from.

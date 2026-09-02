@@ -52,7 +52,7 @@ fn decision_name(decision: MatchDecision) -> &'static str {
 #[test]
 fn every_matching_case_holds() {
     let corpus = corpus();
-    assert_eq!(corpus.version, 1, "unexpected corpus version");
+    assert_eq!(corpus.version, 2, "unexpected corpus version");
 
     let mut failures = Vec::new();
     for case in &corpus.matching {
@@ -143,7 +143,7 @@ fn every_validation_case_holds() {
 #[test]
 fn the_corpus_is_well_formed() {
     let corpus = corpus();
-    assert!(corpus.matching.len() >= 70, "corpus shrank unexpectedly");
+    assert!(corpus.matching.len() >= 140, "corpus shrank unexpectedly");
 
     let mut names: Vec<&str> = corpus
         .matching
@@ -158,7 +158,7 @@ fn the_corpus_is_well_formed() {
 
     for case in &corpus.matching {
         assert!(
-            matches!(case.status.as_str(), "documented" | "decided"),
+            matches!(case.status.as_str(), "documented" | "decided" | "oracle"),
             "{}: unknown status {}",
             case.name,
             case.status
@@ -186,6 +186,7 @@ fn the_corpus_is_well_formed() {
         "defaults-hierarchy",
         "legacy-paths",
         "host",
+        "path-slashes",
     ] {
         assert!(features.contains(required), "no case covers {required}");
     }

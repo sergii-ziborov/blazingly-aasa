@@ -83,8 +83,9 @@ test("surfaces diagnostics with stable codes", () => {
   const diagnostics = validateAasa(Buffer.from('{"applinks":{"details":[{"components":[{"/":"buy/*"}]}]}}'));
   const codes = diagnostics.map((d) => d.code);
   assert.ok(codes.includes("AASA110"), `expected AASA110 in ${codes}`);
-  assert.ok(codes.includes("AASA191"), `expected AASA191 in ${codes}`);
   assert.equal(diagnostics.find((d) => d.code === "AASA110").severity, "error");
+  // A bare path pattern is legal: swcutil matches `buy/*` against `/buy/42`.
+  assert.ok(!codes.includes("AASA191"), `AASA191 was retired, got ${codes}`);
 });
 
 test("throws on an unusable document", () => {

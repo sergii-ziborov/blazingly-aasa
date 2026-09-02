@@ -76,12 +76,19 @@ pattern must not accidentally open a domain.
 | `AASA150` | error | a query predicate is not a string pattern |
 | `AASA180` | warning | a rule constrains nothing and matches every URL |
 | `AASA190` | warning | a rule is unreachable because an earlier rule always matches |
-| `AASA191` | warning | a path pattern cannot match, because URL paths start with `/` |
 | `AASA192` | info | a `defaults` object carries pattern keys with undocumented behaviour |
+
+`AASA191` was removed before the first release. It warned that a path pattern without a leading
+slash could never match, which Apple's `swcutil` disproves — a pattern of `abc` matches `/abc`.
+The number is retired rather than reused: a code never changes meaning.
 
 `AASA180` and `AASA190` travel together: the catch-all is reported once, and every rule it shadows
 is reported as unreachable. Both are worth failing CI on — a rule that never runs is either a typo
 or dead configuration.
+
+`AASA150` deserves more alarm than its name suggests. A non-string predicate such as `"flag": true`
+does not disable that one entry — `swcutil` discards the **entire** `?` dictionary, so every
+constraint beside it stops applying and the rule matches URLs it was never meant to. Fail on it.
 
 ### Limits
 
@@ -97,7 +104,6 @@ A reasonable starting point, in rough order of how much they hurt in production:
 
 * **Fail** on any `error`.
 * **Fail** on `AASA190` and `AASA180` — a rule that never runs is a bug either way.
-* **Fail** on `AASA191` — a path pattern that cannot match is almost always a missing `/`.
 * **Warn** on `AASA120`, `AASA121`, `AASA122` — legacy shapes worth migrating on your own schedule.
 * **Ignore** `info`.
 

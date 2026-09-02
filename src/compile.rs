@@ -134,8 +134,13 @@ impl std::fmt::Display for EffectiveRule {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum CompiledQuery {
     Whole(Pattern),
-    /// `None` marks a predicate this crate refuses to guess at, which therefore never matches.
-    Items(Vec<(String, Option<Pattern>)>),
+    Items(Vec<(String, Pattern)>),
+    /// A dictionary holding at least one non-string predicate.
+    ///
+    /// `swcutil` ignores the whole dictionary in that case rather than the offending entry, so a
+    /// single `"flag": true` silently drops every constraint beside it. This matches that, and
+    /// `AASA150` reports it as an error because of how much it quietly opens up.
+    IgnoredDictionary(Vec<String>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -145,7 +150,8 @@ pub(crate) struct CompiledRule {
     pub(crate) legacy: bool,
     pub(crate) exclude: bool,
     pub(crate) effective: EffectiveDefaults,
-    pub(crate) path: Option<Pattern>,
+    /// One or two compiled forms of the `/` pattern; see [`crate::url::path_pattern_forms`].
+    pub(crate) path: Option<Vec<Pattern>>,
     pub(crate) query: Option<CompiledQuery>,
     pub(crate) fragment: Option<Pattern>,
     pub(crate) comment: Option<String>,
@@ -154,10 +160,13 @@ pub(crate) struct CompiledRule {
 impl CompiledRule {
     /// Whether the rule constrains nothing and so accepts every URL.
     pub(crate) fn is_unconstrained(&self) -> bool {
-        let path_any = self.path.as_ref().map_or(true, Pattern::is_any);
+        let path_any = self
+            .path
+            .as_ref()
+            .map_or(true, |forms| forms.iter().any(Pattern::is_any));
         let fragment_any = self.fragment.as_ref().map_or(true, Pattern::is_any);
         let query_any = match &self.query {
-            None => true,
+            None | Some(CompiledQuery::IgnoredDictionary(_)) => true,
             Some(CompiledQuery::Whole(pattern)) => pattern.is_any(),
             Some(CompiledQuery::Items(items)) => items.is_empty(),
         };
@@ -170,13 +179,18 @@ impl CompiledRule {
             CompiledQuery::Items(items) => EffectiveQuery::Items(
                 items
                     .iter()
-                    .map(|(key, pattern)| {
-                        (key.clone(), pattern.as_ref().map(|p| p.source().to_owned()))
-                    })
+                    .map(|(key, pattern)| (key.clone(), Some(pattern.source().to_owned())))
                     .collect(),
             ),
+            CompiledQuery::IgnoredDictionary(keys) => {
+                EffectiveQuery::Items(keys.iter().map(|key| (key.clone(), None)).collect())
+            }
         });
-        let path = self.path.as_ref().map(|p| p.source().to_owned());
+        let path = self
+            .path
+            .as_ref()
+            .and_then(|forms| forms.first())
+            .map(|p| p.source().to_owned());
         let fragment = self.fragment.as_ref().map(|p| p.source().to_owned());
         // A rule that constrains nothing behaves identically regardless of its flags, so normalise
         // them away rather than reporting a spurious difference.
@@ -568,19 +582,22 @@ fn compile_component(
         effective.percent_encoded = percent_encoded;
     }
 
+    // A leading run of slashes in a path pattern is not significant; `swcutil` matches `//abc`
+    // against `/abc`.
     let compiled_path = component.path.as_ref().map(|pattern| {
-        compile_pattern(
-            pattern,
-            effective.case_sensitive,
-            table,
-            &|| format!("{}./", path()),
-            diagnostics,
-        )
+        crate::url::path_pattern_forms(pattern)
+            .iter()
+            .map(|form| {
+                compile_pattern(
+                    form,
+                    effective.case_sensitive,
+                    table,
+                    &|| format!("{}./", path()),
+                    diagnostics,
+                )
+            })
+            .collect::<Vec<_>>()
     });
-
-    if let (Some(source), Some(compiled)) = (component.path.as_ref(), compiled_path.as_ref()) {
-        warn_if_path_cannot_match(source, compiled, path, diagnostics);
-    }
 
     let compiled_fragment = component.fragment.as_ref().map(|pattern| {
         compile_pattern(
@@ -600,24 +617,33 @@ fn compile_component(
             &|| format!("{}.?", path()),
             diagnostics,
         )),
-        QueryRule::Items(items) => CompiledQuery::Items(
-            items
-                .iter()
-                .map(|(key, predicate)| {
-                    let compiled = match predicate {
-                        QueryPredicate::Pattern(pattern) => Some(compile_pattern(
-                            pattern,
-                            effective.case_sensitive,
-                            table,
-                            &|| format!("{}.?.{key}", path()),
-                            diagnostics,
-                        )),
-                        QueryPredicate::Unsupported { .. } => None,
-                    };
-                    (key.clone(), compiled)
-                })
-                .collect(),
-        ),
+        QueryRule::Items(items) => {
+            if items
+                .values()
+                .any(|predicate| matches!(predicate, QueryPredicate::Unsupported { .. }))
+            {
+                CompiledQuery::IgnoredDictionary(items.keys().cloned().collect())
+            } else {
+                CompiledQuery::Items(
+                    items
+                        .iter()
+                        .filter_map(|(key, predicate)| match predicate {
+                            QueryPredicate::Pattern(pattern) => Some((
+                                key.clone(),
+                                compile_pattern(
+                                    pattern,
+                                    effective.case_sensitive,
+                                    table,
+                                    &|| format!("{}.?.{key}", path()),
+                                    diagnostics,
+                                ),
+                            )),
+                            QueryPredicate::Unsupported { .. } => None,
+                        })
+                        .collect(),
+                )
+            }
+        }
     });
 
     CompiledRule {
@@ -646,14 +672,10 @@ fn compile_legacy_path(
         Some(rest) => (true, rest.trim_start()),
         None => (false, source),
     };
-    let compiled = compile_pattern(
-        pattern_source,
-        base.case_sensitive,
-        table,
-        path,
-        diagnostics,
-    );
-    warn_if_path_cannot_match(pattern_source, &compiled, path, diagnostics);
+    let compiled: Vec<Pattern> = crate::url::path_pattern_forms(pattern_source)
+        .iter()
+        .map(|form| compile_pattern(form, base.case_sensitive, table, path, diagnostics))
+        .collect();
     CompiledRule {
         detail_index,
         rule_index,
@@ -665,29 +687,6 @@ fn compile_legacy_path(
         fragment: None,
         comment: None,
     }
-}
-
-/// Flags a path pattern that can never match because URL paths always begin with `/`.
-fn warn_if_path_cannot_match(
-    source: &str,
-    compiled: &Pattern,
-    path: PathFn<'_>,
-    diagnostics: &mut Vec<Diagnostic>,
-) {
-    if compiled.is_any() || source.is_empty() {
-        return;
-    }
-    if source.starts_with(['/', '*', '?', '$']) {
-        return;
-    }
-    diagnostics.push(
-        Diagnostic::new(
-            DiagnosticCode::PathPatternMissingLeadingSlash,
-            path(),
-            format!("`{source}` cannot match: a URL path always starts with `/`"),
-        )
-        .with_help(format!("did you mean `/{source}`?")),
-    );
 }
 
 fn compile_pattern(

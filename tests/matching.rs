@@ -196,7 +196,10 @@ fn whole_query_and_query_dictionary_are_different_constraints() {
 }
 
 #[test]
-fn all_named_query_predicates_must_hold() {
+fn a_missing_query_item_counts_as_empty() {
+    // swcutil treats an item the URL does not carry as present with an empty value, so a pattern
+    // that accepts the empty string is satisfied by its absence. Confirmed against the oracle;
+    // Apple documents none of this.
     let aasa = compile(
         r##"{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],
         "components":[{"?":{"a":"1","b":"*"}}]}]}}"##,
@@ -213,7 +216,27 @@ fn all_named_query_predicates_must_hold() {
         "example.com",
         APP,
         "https://example.com/x?a=1",
+        Match,
+    );
+
+    // `?*` needs at least one character, so an absent item does not satisfy it.
+    let strict = compile(
+        r##"{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],
+        "components":[{"?":{"b":"?*"}}]}]}}"##,
+    );
+    expect(
+        &strict,
+        "example.com",
+        APP,
+        "https://example.com/x?a=1",
         NoMatch,
+    );
+    expect(
+        &strict,
+        "example.com",
+        APP,
+        "https://example.com/x?b=1",
+        Match,
     );
 }
 
@@ -247,7 +270,9 @@ fn a_query_item_without_a_value_reads_as_empty() {
 }
 
 #[test]
-fn a_repeated_query_item_matches_if_any_occurrence_does() {
+fn every_occurrence_of_a_repeated_query_item_must_match() {
+    // swcutil requires *all* occurrences to match, not any: `?id=7&id=42` fails the pattern `42`
+    // whichever position the target sits in, while `?id=7&id=7` passes the pattern `7`.
     let aasa = compile(
         r##"{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],
         "components":[{"?":{"id":"42"}}]}]}}"##,
@@ -256,14 +281,118 @@ fn a_repeated_query_item_matches_if_any_occurrence_does() {
         &aasa,
         "example.com",
         APP,
-        "https://example.com/x?id=7&id=42",
+        "https://example.com/x?id=42",
         Match,
     );
     expect(
         &aasa,
         "example.com",
         APP,
-        "https://example.com/x?id=7&id=8",
+        "https://example.com/x?id=7&id=42",
+        NoMatch,
+    );
+    expect(
+        &aasa,
+        "example.com",
+        APP,
+        "https://example.com/x?id=42&id=7",
+        NoMatch,
+    );
+
+    let identical = compile(
+        r##"{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],
+        "components":[{"?":{"id":"7"}}]}]}}"##,
+    );
+    expect(
+        &identical,
+        "example.com",
+        APP,
+        "https://example.com/x?id=7&id=7",
+        Match,
+    );
+}
+
+/// A non-string predicate does not disable just itself: swcutil discards the whole `?` dictionary,
+/// so every constraint beside it stops applying. `AASA150` reports it as an error for that reason.
+#[test]
+fn a_non_string_predicate_discards_the_whole_query_dictionary() {
+    let aasa = compile(
+        r##"{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],
+        "components":[{"?":{"a":"1","flag":true}}]}]}}"##,
+    );
+    expect(
+        &aasa,
+        "example.com",
+        APP,
+        "https://example.com/x?a=1",
+        Match,
+    );
+    // `a=2` violates the string predicate, and it matches anyway.
+    expect(
+        &aasa,
+        "example.com",
+        APP,
+        "https://example.com/x?a=2",
+        Match,
+    );
+    assert!(aasa
+        .validate()
+        .contains(blazingly_aasa::DiagnosticCode::UnsupportedQueryPredicate));
+}
+
+/// A trailing slash is insignificant at both ends, and a leading slash is optional in the pattern.
+#[test]
+fn slashes_at_the_ends_of_a_path_are_insignificant() {
+    let star = compile(
+        r##"{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],
+        "components":[{"/":"/buy/*"}]}]}}"##,
+    );
+    expect(&star, "example.com", APP, "https://example.com/buy", Match);
+    expect(&star, "example.com", APP, "https://example.com/buy/", Match);
+    expect(
+        &star,
+        "example.com",
+        APP,
+        "https://example.com/buy/42",
+        Match,
+    );
+    expect(
+        &star,
+        "example.com",
+        APP,
+        "https://example.com/buyer",
+        NoMatch,
+    );
+
+    let bare = compile(
+        r##"{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],
+        "components":[{"/":"buy/*"}]}]}}"##,
+    );
+    expect(
+        &bare,
+        "example.com",
+        APP,
+        "https://example.com/buy/42",
+        Match,
+    );
+
+    // But a wildcard still counts characters: `????` is four, and `481` plus a slash is not four.
+    let counted = compile(
+        r##"{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],
+        "components":[{"/":"/id/????"}]}]}}"##,
+    );
+    expect(
+        &counted,
+        "example.com",
+        APP,
+        "https://example.com/id/4815",
+        Match,
+    );
+    expect(
+        &counted,
+        "example.com",
+        APP,
+        "https://example.com/id/481",
         NoMatch,
     );
 }

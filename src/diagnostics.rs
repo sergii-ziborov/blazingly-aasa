@@ -29,6 +29,9 @@ impl fmt::Display for Severity {
     }
 }
 
+// AASA191 (`path pattern cannot match because URL paths start with /`) was removed before the
+// first release: Apple's own `swcutil` matches a pattern of `abc` against `/abc`, so the lint was
+// wrong. The number is retired rather than reused -- a code never changes meaning.
 macro_rules! diagnostic_codes {
     ($($variant:ident => ($code:literal, $severity:ident, $title:literal),)*) => {
         /// A stable, machine-readable identifier for a validation finding.
@@ -106,7 +109,6 @@ diagnostic_codes! {
     DocumentTooLarge => ("AASA170", Error, "payload exceeds the configured size limit"),
     EmptyComponentRule => ("AASA180", Warning, "component rule constrains nothing and matches every URL"),
     UnreachableRule => ("AASA190", Warning, "rule is unreachable because an earlier rule always matches"),
-    PathPatternMissingLeadingSlash => ("AASA191", Warning, "path pattern cannot match because URL paths start with /"),
     DefaultsContainsPatternKeys => ("AASA192", Info, "defaults object carries pattern keys with undocumented behavior"),
     NoDetails => ("AASA193", Warning, "applinks declares no details, so no app can open this domain"),
     EmptyPatternAlternative => ("AASA194", Warning, "substitution value is empty"),

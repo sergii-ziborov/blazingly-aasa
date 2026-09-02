@@ -149,11 +149,18 @@ fn a_star_path_also_counts_as_a_catch_all() {
     );
 }
 
+/// A path pattern without a leading slash used to raise AASA191. `swcutil` matches `buy/*`
+/// against `/buy/42`, so the lint was wrong and was removed; the number is retired.
 #[test]
-fn path_pattern_missing_leading_slash() {
-    assert_code(
-        r#"{"applinks":{"details":[{"appID":"A.b","components":[{"/":"buy/*"}]}]}}"#,
-        DiagnosticCode::PathPatternMissingLeadingSlash,
+fn a_bare_path_pattern_is_legal() {
+    let report =
+        report(r#"{"applinks":{"details":[{"appID":"A.b","components":[{"/":"buy/*"}]}]}}"#);
+    assert!(report.is_empty(), "a bare path pattern is legal:\n{report}");
+    assert!(
+        !DiagnosticCode::all()
+            .iter()
+            .any(|code| code.as_str() == "AASA191"),
+        "AASA191 was retired and must not be reused"
     );
 }
 
@@ -203,7 +210,9 @@ fn severities_and_codes_are_stable() {
 
 #[test]
 fn errors_sort_ahead_of_warnings() {
-    let report = report(r#"{"applinks":{"details":[{"components":[{"/":"buy/*"}]}]}}"#);
+    // No appID is an error; a catch-all shadowing a later rule is a warning.
+    let report =
+        report(r#"{"applinks":{"details":[{"components":[{"/":"*"},{"/":"/never/*"}]}]}}"#);
     let severities: Vec<Severity> = report.diagnostics().iter().map(|d| d.severity).collect();
     let mut sorted = severities.clone();
     sorted.sort_by(|a, b| b.cmp(a));

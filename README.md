@@ -337,26 +337,29 @@ Payload: 345 KB raw, 141 KB gzip, 113 KB brotli.
 Apple's reference pages leave real questions open. Rather than guessing and presenting the guess as
 fact, every behaviour is classified:
 
-- **documented** — Apple states it, and a test asserts it.
-- **decided** — Apple does not state it; this crate chose a reading and pinned it with a test.
+- **oracle** — checked against Apple's `swcutil`, with the run committed.
+- **documented** — Apple states it and a test asserts it, but no oracle run covers it.
+- **decided** — Apple does not state it and the oracle cannot speak to it.
 
-[docs/parity.md](docs/parity.md) is that table, feature by feature. Nothing is yet marked
-**oracle-checked** against Apple's `swcutil`, so this crate does not claim bit-exact parity with
-iOS — it claims to implement what Apple documents and to be explicit about the rest.
-`scripts/oracle_swcutil.sh` runs the differential check on macOS.
-
-Two examples of what that discipline turns up:
+[docs/parity.md](docs/parity.md) is that table, feature by feature. **139 of the 140 matching cases
+are now verified against Apple's own `swcutil`**, with the raw runs committed in
+`conformance/oracle` so the conclusions are auditable without a Mac. The one exception is this
+crate's own API convention that an empty domain skips the host check, which `swcutil` has no way to
+express.
 
 **`$(region)` does not match `UK`.** Apple's prose gives "`CA`, `UK`, and `US`" as example regions,
 but `UK` is not an ISO 3166-1 alpha-2 code and does not appear in `Locale.isoRegionCodes` — the
 United Kingdom is `GB`. The `$(region)` and `$(lang)` tables are *generated* from Foundation by
 `scripts/generate_iso_tables.swift` rather than transcribed, so the list Apple points at wins over
-the prose. `ISO_TABLE_SOURCE` records which OS release the snapshot came from.
+the prose. `swcutil` agrees: it does not match `UK` either.
 
-**Path patterns without a leading slash.** One Apple example writes `"/": "abc"` and says
-`https://www.example.com/abc` matches, while every other example writes `/buy/*` — and a URL path
-always starts with `/`. Instead of guessing, this crate matches the full path and reports the
-suspicious pattern as `AASA191` with a suggested fix. An ambiguity became a useful lint.
+**And the discipline caught this crate being wrong four times.** The first differential run against
+`swcutil` agreed on 68 of 73 cases. The other four were all this crate's fault, including one it had
+been confident enough about to ship as a lint: `AASA191` warned that a path pattern without a
+leading slash could never match, since URL paths start with `/`. Apple matches `abc` against `/abc`.
+The lint was removed, its number retired, and the documentation example it contradicted now passes
+as a test. The others were a missing query item, a repeated query name, and a non-string predicate —
+see [docs/parity.md](docs/parity.md) for each.
 
 The test suite is 90-odd tests across Apple's documented examples, parsing, validation, matching,
 percent-encoding, and semantic diff — plus property tests that check the pattern matcher against a

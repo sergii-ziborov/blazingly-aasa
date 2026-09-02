@@ -45,6 +45,7 @@ impl<'a> Items<'a> {
 /// The percent-decoded forms, built only when some rule actually asks for them.
 struct Decoded {
     path: String,
+    path_forms: Vec<String>,
     query: String,
     fragment: String,
     items: Vec<(String, String)>,
@@ -53,6 +54,7 @@ struct Decoded {
 /// The URL components a rule can be compared against.
 struct Inputs<'a> {
     path: &'a str,
+    path_forms: Vec<String>,
     query: &'a str,
     fragment: &'a str,
     items: Vec<(&'a str, &'a str)>,
@@ -68,6 +70,7 @@ impl<'a> Inputs<'a> {
             Vec::new()
         };
         let decoded = needs_decoded.then(|| Decoded {
+            path_forms: crate::url::path_forms(&percent_decode(parts.path())),
             path: percent_decode(parts.path()),
             query: percent_decode(parts.query()),
             fragment: percent_decode(parts.fragment()),
@@ -78,6 +81,7 @@ impl<'a> Inputs<'a> {
         });
         Self {
             path: parts.path(),
+            path_forms: crate::url::path_forms(parts.path()),
             query: parts.query(),
             fragment: parts.fragment(),
             items,
@@ -89,6 +93,16 @@ impl<'a> Inputs<'a> {
         match (percent_encoded, &self.decoded) {
             (false, Some(decoded)) => &decoded.path,
             _ => self.path,
+        }
+    }
+
+    /// Every form of the path a `/` pattern may be compared against.
+    ///
+    /// Apple treats the leading and trailing slash as optional; see [`crate::path_forms`].
+    fn path_forms_for(&self, percent_encoded: bool) -> &[String] {
+        match (percent_encoded, &self.decoded) {
+            (false, Some(decoded)) => &decoded.path_forms,
+            _ => &self.path_forms,
         }
     }
 
@@ -358,14 +372,21 @@ fn rule_matches(rule: &CompiledRule, inputs: &Inputs<'_>) -> bool {
     let effective = rule.effective;
     let case_sensitive = effective.case_sensitive;
 
-    if let Some(pattern) = &rule.path {
-        if !pattern.matches_with(inputs.path_for(effective.percent_encoded), case_sensitive) {
+    if let Some(patterns) = &rule.path {
+        let forms = inputs.path_forms_for(effective.percent_encoded);
+        let matched = patterns.iter().any(|pattern| {
+            forms
+                .iter()
+                .any(|form| pattern.matches_with(form, case_sensitive))
+        });
+        if !matched {
             return false;
         }
     }
 
     match &rule.query {
-        None => {}
+        // An ignored dictionary constrains nothing, exactly as swcutil treats it.
+        None | Some(CompiledQuery::IgnoredDictionary(_)) => {}
         Some(CompiledQuery::Whole(pattern)) => {
             if !pattern.matches_with(inputs.query_for(effective.percent_encoded), case_sensitive) {
                 return false;
@@ -374,7 +395,6 @@ fn rule_matches(rule: &CompiledRule, inputs: &Inputs<'_>) -> bool {
         Some(CompiledQuery::Items(predicates)) => {
             let items = inputs.items_for(effective.percent_encoded);
             for (name, pattern) in predicates {
-                let Some(pattern) = pattern else { return false };
                 if !query_item_matches(name, pattern, items, case_sensitive) {
                     return false;
                 }
@@ -393,29 +413,46 @@ fn rule_matches(rule: &CompiledRule, inputs: &Inputs<'_>) -> bool {
     true
 }
 
+/// Whether the named query item satisfies `pattern`.
+///
+/// Two rules, both taken from `swcutil` rather than from the documentation, which says nothing
+/// about either:
+///
+/// * An item the URL does not carry counts as present with an empty value. `{"b": "*"}` therefore
+///   matches a URL with no `b` at all, while `{"b": "?*"}` does not.
+/// * When a name repeats, **every** occurrence must match. `{"id": "42"}` does not match
+///   `?id=7&id=42`, and `{"id": "7"}` does match `?id=7&id=7`.
 fn query_item_matches(
     name: &str,
     pattern: &Pattern,
     items: Items<'_>,
     case_sensitive: bool,
 ) -> bool {
+    let mut seen = false;
     for index in 0..items.len() {
         let (candidate, value) = items.get(index);
-        if str_eq(candidate, name, case_sensitive) && pattern.matches_with(value, case_sensitive) {
-            return true;
+        if !str_eq(candidate, name, case_sensitive) {
+            continue;
+        }
+        seen = true;
+        if !pattern.matches_with(value, case_sensitive) {
+            return false;
         }
     }
-    false
+    if seen {
+        return true;
+    }
+    pattern.matches_with("", case_sensitive)
 }
 
 fn evaluate(rule: &CompiledRule, inputs: &Inputs<'_>) -> RuleTrace {
     let effective = rule.effective;
     let mut components = Vec::new();
 
-    components.push(compare(
-        UrlComponent::Path,
+    components.push(compare_path(
         rule.path.as_ref(),
         inputs.path_for(effective.percent_encoded),
+        inputs.path_forms_for(effective.percent_encoded),
         effective,
     ));
 
@@ -426,6 +463,17 @@ fn evaluate(rule: &CompiledRule, inputs: &Inputs<'_>) -> RuleTrace {
             inputs.query_for(effective.percent_encoded),
             effective,
         )),
+        Some(CompiledQuery::IgnoredDictionary(keys)) => {
+            for name in keys {
+                components.push(ComponentTrace {
+                    component: UrlComponent::QueryItem(name.clone()),
+                    pattern: None,
+                    input: String::new(),
+                    matched: true,
+                    reason: ComponentReason::UnsupportedPredicate,
+                });
+            }
+        }
         Some(CompiledQuery::Whole(pattern)) => components.push(compare(
             UrlComponent::Query,
             Some(pattern),
@@ -435,7 +483,7 @@ fn evaluate(rule: &CompiledRule, inputs: &Inputs<'_>) -> RuleTrace {
         Some(CompiledQuery::Items(predicates)) => {
             let items = inputs.items_for(effective.percent_encoded);
             for (name, pattern) in predicates {
-                components.push(compare_query_item(name, pattern.as_ref(), items, effective));
+                components.push(compare_query_item(name, pattern, items, effective));
             }
         }
     }
@@ -487,7 +535,7 @@ fn compare(
 
 fn compare_query_item(
     name: &str,
-    pattern: Option<&Pattern>,
+    pattern: &Pattern,
     items: Items<'_>,
     effective: EffectiveDefaults,
 ) -> ComponentTrace {
@@ -500,45 +548,89 @@ fn compare_query_item(
         }
     }
 
+    // An item the URL does not carry counts as present with an empty value.
     if present.is_empty() {
+        let (matched, reason) = decide_component(pattern, "", effective.case_sensitive);
         return ComponentTrace {
             component,
-            pattern: pattern.map(|pattern| pattern.source().to_owned()),
+            pattern: Some(pattern.source().to_owned()),
             input: String::new(),
-            matched: false,
-            reason: ComponentReason::MissingQueryItem,
+            matched,
+            reason: if matched {
+                reason
+            } else {
+                ComponentReason::MissingQueryItem
+            },
         };
     }
 
-    let Some(pattern) = pattern else {
-        return ComponentTrace {
-            component,
-            pattern: None,
-            input: present[0].to_owned(),
-            matched: false,
-            reason: ComponentReason::UnsupportedPredicate,
-        };
-    };
-
-    // A query may repeat a name; Apple does not document which wins, so any match counts.
-    let mut best: Option<(bool, ComponentReason, String)> = None;
-    for value in present {
+    // Every occurrence of a repeated name must match.
+    for value in &present {
         let (matched, reason) = decide_component(pattern, value, effective.case_sensitive);
-        if matched {
-            best = Some((true, reason, value.to_owned()));
-            break;
-        }
-        if best.is_none() || reason == ComponentReason::CaseMismatch {
-            best = Some((false, reason, value.to_owned()));
+        if !matched {
+            return ComponentTrace {
+                component,
+                pattern: Some(pattern.source().to_owned()),
+                input: (*value).to_owned(),
+                matched: false,
+                reason,
+            };
         }
     }
-    let (matched, reason, input) =
-        best.unwrap_or((false, ComponentReason::PatternMismatch, String::new()));
+    let (_, reason) = decide_component(pattern, present[0], effective.case_sensitive);
     ComponentTrace {
         component,
         pattern: Some(pattern.source().to_owned()),
-        input,
-        matched,
+        input: present.join(", "),
+        matched: true,
+        reason,
+    }
+}
+
+/// Compares the path against every form Apple accepts, reporting the one that matched.
+fn compare_path(
+    patterns: Option<&Vec<Pattern>>,
+    path: &str,
+    forms: &[String],
+    effective: EffectiveDefaults,
+) -> ComponentTrace {
+    let Some(patterns) = patterns else {
+        return ComponentTrace {
+            component: UrlComponent::Path,
+            pattern: None,
+            input: path.to_owned(),
+            matched: true,
+            reason: ComponentReason::Unconstrained,
+        };
+    };
+    let display = patterns
+        .first()
+        .map(|pattern| pattern.source().to_owned())
+        .unwrap_or_default();
+    for pattern in patterns {
+        for form in forms {
+            let (matched, reason) = decide_component(pattern, form, effective.case_sensitive);
+            if matched {
+                return ComponentTrace {
+                    component: UrlComponent::Path,
+                    pattern: Some(display),
+                    input: path.to_owned(),
+                    matched: true,
+                    reason,
+                };
+            }
+        }
+    }
+    let reason = patterns
+        .first()
+        .map_or(ComponentReason::PatternMismatch, |pattern| {
+            decide_component(pattern, path, effective.case_sensitive).1
+        });
+    ComponentTrace {
+        component: UrlComponent::Path,
+        pattern: Some(display),
+        input: path.to_owned(),
+        matched: false,
         reason,
     }
 }

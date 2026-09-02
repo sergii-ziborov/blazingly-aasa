@@ -2,130 +2,162 @@
 
 What is implemented, and how confident you should be in it.
 
-Three levels of evidence, and the difference between them matters:
-
 | Mark | Meaning |
 | --- | --- |
-| **documented** | Apple states the behaviour, and a test asserts it |
-| **decided** | Apple does not state it; this crate chose a reading and pinned it with a test |
-| **oracle** | Checked against Apple's `swcutil` and promoted into a fixture |
+| **oracle** | Checked against Apple's `swcutil` and recorded in [`conformance/oracle`](../conformance/oracle) |
+| **documented** | Apple states the behaviour and a test asserts it, but no oracle run covers it |
+| **decided** | Apple does not state it and the oracle cannot speak to it; this crate chose a reading |
 
-Nothing is marked **oracle** yet. `swcutil` requires root and exists only on macOS, so it is not
-part of ordinary CI; `scripts/oracle_swcutil.sh` runs it on demand. Until a row moves to **oracle**,
-this crate does not claim bit-exact parity with iOS. It claims to implement what Apple documents,
-and to be explicit about everything Apple does not.
+139 of the 140 matching cases in `conformance/cases.json` are **oracle**-verified against
+`swcutil` on macOS 27.0 (26A5388g), 2026-09-02. The remaining one is this crate's own API
+convention, which `swcutil` has no way to express.
+
+## What the oracle changed
+
+The first differential run put 68 of 73 corpus cases in agreement. One disagreement was an
+artifact of the harness. **The other four were this crate being wrong**, and all four are now
+fixed. Two more findings came out of the 67 targeted probes that followed.
+
+### A path pattern without a leading slash matches after all
+
+Apple's `components` reference contains `{"/": "abc", "?": "def", "#": "*"}` and says
+`https://www.example.com/abc?def` matches it, while every other example writes `/buy/*`. This crate
+read the bare `abc` as unmatchable and raised `AASA191` for it — "a URL path always starts with
+`/`", which sounded obviously true.
+
+`swcutil` matches `abc` against `/abc`, and `buy/*` against `/buy/42`. **The documentation example
+was right and the lint was wrong.** `AASA191` was removed and its number retired; the leading slash
+of a path pattern is optional.
+
+### Trailing slashes are insignificant
+
+`/buy/*` matches `/buy`, `/buy` matches `/buy/`, `/buy/` matches `/buy`, and `/buy/*` matches
+`/buy//`. A leading run of slashes in a pattern collapses to one, so `//abc` matches `/abc`.
+
+This one has a trap. The obvious implementation — also try the path with a trailing slash added —
+makes `/id/????` match `/id/481`, because `481/` is four characters. `swcutil` says that does not
+match, and the conformance corpus caught it before the change shipped. The actual rule is narrower:
+a trailing slash run is *dropped* from both sides, and a pattern ending in `/*` additionally
+matches the path without that segment.
+
+### A missing query item counts as empty
+
+`{"b": "*"}` matches a URL with no `b` at all, and `{"b": ""}` does too. `{"b": "?*"}` does not,
+because it needs at least one character. This crate previously failed any predicate whose item was
+absent.
+
+### Every occurrence of a repeated query name must match
+
+`{"id": "42"}` does **not** match `?id=7&id=42`, in any position — not first, not last, not any.
+But `{"id": "7"}` does match `?id=7&id=7`. The rule is that all occurrences must satisfy the
+pattern. This crate previously accepted any single match, which was the most permissive of the
+three plausible readings and the wrong one.
+
+### A non-string predicate discards the whole query dictionary
+
+`{"a": "1", "flag": true}` matches `?a=2`. Not because `a=2` satisfies `a: "1"` — it does not — but
+because a single non-string predicate makes `swcutil` ignore **the entire `?` object**, taking
+every constraint beside it with it.
+
+This crate previously made such a predicate never match, on the principle of refusing rather than
+guessing. That was the wrong direction: Apple is more permissive here, not less, so the safe-looking
+choice produced false negatives. `AASA150` remains an error, and its documentation now says what it
+actually costs.
 
 ## Structure
 
-| Feature | Status | Evidence |
-| --- | --- | --- |
-| `applinks.details` array | documented | `tests/apple_examples.rs` |
-| `appID` | documented | `tests/apple_examples.rs` |
-| `appIDs` | documented | `tests/apple_examples.rs` |
-| both `appID` and `appIDs` on one entry | decided — union of the two, warned as `AASA111` | `tests/parsing.rs` |
-| `details` as a dictionary keyed by app ID | decided — supported, sorted-key order, warned as `AASA121` | `tests/apple_examples.rs` |
-| legacy `applinks.apps` | documented — must be empty, warned as `AASA122` | `tests/validation.rs` |
-| `webcredentials` / `appclips` / `activitycontinuation` | documented | `tests/apple_examples.rs` |
-| unknown top-level keys | decided — ignored, noted as `AASA101` | `tests/parsing.rs` |
-| several entries listing the same app | decided — source order, warned as `AASA160` | `tests/matching.rs` |
+| Feature | Status |
+| --- | --- |
+| `applinks.details` array, `appID`, `appIDs` | oracle |
+| both `appID` and `appIDs` on one entry — union, warned as `AASA111` | documented |
+| `details` as a dictionary keyed by app ID | oracle |
+| legacy `applinks.apps` must be empty | documented |
+| `webcredentials` / `appclips` / `activitycontinuation` | oracle |
+| unknown top-level keys ignored, noted as `AASA101` | documented |
+| CMS-signed (iOS 9) files read, signature not verified | decided |
 
 ## Matching
 
-| Feature | Status | Evidence |
-| --- | --- | --- |
-| ordered rules, first match wins | documented | `tests/apple_examples.rs` |
-| `exclude` stops the scan | documented | `tests/matching.rs` |
-| every specified component must match | documented | `tests/apple_examples.rs` |
-| unspecified component defaults to `*` | documented | `tests/matching.rs` |
-| absent component reads as empty string | documented (implied by Apple's `"#": "*"` example) | `tests/matching.rs` |
-| `*`, `?`, `?*` | documented | `src/pattern.rs`, `tests/properties.rs` |
-| `?` counts characters, not bytes | decided | `src/pattern.rs` tests |
-| no escape syntax | decided — Apple documents none | `docs/semantics.md` |
-| query as a whole string | documented | `tests/matching.rs` |
-| query as a dictionary | documented | `tests/apple_examples.rs` |
-| fragment | documented | `tests/apple_examples.rs` |
-| `caseSensitive` and its hierarchy | documented | `tests/apple_examples.rs`, `tests/matching.rs` |
-| non-ASCII case folding | decided — simple 1:1 folding; full folding out of scope | `docs/semantics.md` |
-| query item names follow `caseSensitive` | decided | `tests/matching.rs` |
-| item without `=` has an empty value | decided | `tests/matching.rs` |
-| repeated query name matches if any occurrence does | decided | `tests/matching.rs` |
-| non-string query predicate | decided — never matches, error `AASA150` | `tests/validation.rs` |
-| host must equal the served domain | decided — this crate's check, not part of the file | `tests/matching.rs` |
-| non-`https` scheme | decided — still matched, reported as a note | `tests/matching.rs` |
-| explicit port | decided — preserved, reported as a note | `tests/matching.rs` |
+| Feature | Status |
+| --- | --- |
+| ordered rules, first match wins, `exclude` stops the scan | oracle |
+| every specified component must match | oracle |
+| unspecified component defaults to `*` | oracle |
+| absent component reads as the empty string | oracle |
+| `*`, `?`, `?*` | oracle |
+| leading slash of a path pattern optional | oracle |
+| trailing slash insignificant; `/*` matches the parent path | oracle |
+| leading slash run in a pattern collapses | oracle |
+| `?` counts characters, not bytes | decided |
+| query as a whole string | oracle |
+| query as a dictionary | oracle |
+| missing query item counts as empty | oracle |
+| all occurrences of a repeated query name must match | oracle |
+| non-string predicate discards the whole dictionary | oracle |
+| fragment | oracle |
+| `caseSensitive` and its three-level hierarchy | oracle |
+| non-ASCII case folding — simple 1:1, not full folding | decided |
+| legacy `paths` with `NOT ` | oracle |
+| host must equal the served domain | oracle |
+| empty domain means "skip the host check" | decided — this crate's API; `swcutil` requires `-d` |
+| non-`https` scheme still matched, reported as a note | decided |
 
 ## Percent encoding
 
-The least settled area, and the one most worth running the oracle against.
+Previously the least certain area of the crate. **Every behaviour is now oracle-confirmed**, and
+none of them changed:
 
-| Feature | Status | Evidence |
-| --- | --- | --- |
-| `percentEncoded: true` compares against the URL as written | decided | `tests/encoding.rs` |
-| `percentEncoded: false` decodes the URL first | decided | `tests/encoding.rs` |
-| `%2F` is not a path separator under the default | decided | `tests/encoding.rs` |
-| escape hex case is significant when comparing encoded text | decided | `tests/encoding.rs` |
-| invalid escapes are left as written | decided | `tests/encoding.rs` |
+| Behaviour | Status |
+| --- | --- |
+| `percentEncoded: true` compares against the URL as written | oracle |
+| `percentEncoded: false` decodes the URL, leaving the pattern alone | oracle |
+| `%2F` is not a path separator under the default | oracle |
+| escape hex case is significant when comparing encoded text | oracle |
+| a pattern that is itself encoded stops matching once decoding is on | oracle |
 
-Apple documents the key as "whether URLs are percent-encoded" and nothing more. Two readings are
-compatible with that sentence — encode the pattern, or decode the URL — and they agree on ordinary
-input while diverging on encoded separators. This crate decodes the URL, because encoding a pattern
-that contains `*` and `?` is not well defined.
+That last row is the one that settles it. Two readings of Apple's one-sentence description were
+possible — decode the URL, or encode the pattern — and they agree on ordinary input. They disagree
+on `{"/": "/a%20b", "percentEncoded": false}` against `/a%20b`: decoding the URL yields `/a b`,
+which the still-encoded pattern does not match, while encoding the pattern would match. `swcutil`
+does not match. This crate decodes the URL, and that is now confirmed rather than argued.
 
 ## Substitution variables
 
-| Feature | Status | Evidence |
-| --- | --- | --- |
-| custom variables | documented | `tests/apple_examples.rs` |
-| names are case-sensitive, may not contain `$ ( )` | documented | `tests/validation.rs` |
-| values may contain `?` and `*` | documented | `src/pattern.rs` |
-| values may not reference other variables | documented — error `AASA141` | `tests/validation.rs` |
-| `$(alpha)` `$(upper)` `$(lower)` `$(alnum)` `$(digit)` `$(xdigit)` | documented | `src/substitution.rs` |
-| each predefined entry matches one alternative | decided — follows from Apple describing them as lists | `tests/apple_examples.rs` |
-| `$(region)` from `Locale.isoRegionCodes` | documented — table generated from Foundation | `tests/apple_examples.rs` |
-| `$(lang)` from `Locale.isoLanguageCodes` | documented — table generated from Foundation | `tests/apple_examples.rs` |
-| `$(region)` does not match `UK` | decided — see below | `tests/apple_examples.rs` |
-| a custom variable shadowing a predefined name | decided — the document wins, warned as `AASA144` | `tests/validation.rs` |
-| an undefined `$(name)` | decided — never matches, error `AASA142` | `tests/validation.rs` |
+| Feature | Status |
+| --- | --- |
+| custom variables, values with wildcards | oracle |
+| names case-sensitive, may not contain `$ ( )` | documented |
+| values may not reference other variables — `AASA141` | documented |
+| `$(alpha)` `$(upper)` `$(lower)` `$(alnum)` `$(digit)` `$(xdigit)` | oracle |
+| each predefined entry matches one alternative | oracle |
+| `$(region)` from `Locale.isoRegionCodes` | oracle |
+| `$(lang)` from `Locale.isoLanguageCodes` | oracle |
+| `$(region)` does not match `UK` | oracle |
+| folding applies to predefined variables under `caseSensitive: false` | oracle |
+| custom variable shadowing a predefined name — `AASA144` | decided |
+| an undefined `$(name)` never matches — `AASA142` | decided |
 
-### The `UK` divergence
+All twenty substitution cases agreed with `swcutil` on the first run, including the `UK` finding:
+Apple's prose lists it as an example region, `Locale.isoRegionCodes` does not contain it, and
+`swcutil` does not match it.
 
-Apple's reference describes `$(region)` as "All ISO regions in isoRegionCodes, such as `CA`, `UK`,
-and `US`". `UK` is not an ISO 3166-1 alpha-2 code and does not appear in `Locale.isoRegionCodes` —
-the United Kingdom is `GB`. The generated table follows the list Apple points at rather than the
-prose example, so a pattern of `$(region)` does not match `UK`.
+## Reproducing
 
-This is worth confirming against `swcutil` if you depend on it. It is pinned by
-`region_table_follows_foundation_not_apples_prose`, so a future decision to change it has to be
-deliberate.
-
-### Table drift
-
-`$(region)` and `$(lang)` change between OS releases. `blazingly_aasa::ISO_TABLE_SOURCE` reports
-which snapshot is compiled in, and the scheduled `apple-oracle` workflow warns when a macOS runner
-disagrees with the committed tables.
-
-## Path patterns without a leading slash
-
-Apple's `components` reference contains this example:
-
-```json
-{ "/": "abc", "?": "def", "#": "*" }
+```bash
+sudo ./scripts/oracle_swcutil.sh
 ```
 
-and says `https://www.example.com/abc?def` matches it. Every other Apple example writes the path
-with a leading slash (`/buy/*`), and a URL path always begins with `/`.
+macOS only, and root only, because `swcutil` refuses to run any subcommand otherwise — which is why
+this is not part of ordinary CI. `conformance/oracle` holds the raw output so the conclusions can
+be audited without a Mac.
 
-The two negatives in that passage are unambiguous and are asserted as tests. The positive is not,
-so this crate matches the full path — including the leading `/` — and reports a pattern that cannot
-match one as `AASA191` with a suggested fix. That turns an ambiguity into a useful lint instead of
-a guess. `swcutil` can settle it.
+The useful subcommand is `swcutil match -u <url> -j <dict>`, which tests one pattern dictionary
+against one URL with no document structure in the way. `swcutil verify -d <domain> -j <file> -u
+<url>` exercises a whole document.
 
 ## Deliberately not implemented
 
-Not gaps — boundaries. These belong to the tools that consume this crate:
-
-network fetching, `.well-known` lookup, Apple CDN behaviour, HTTP redirects and caching, `.ipa`
-or `.app` inspection, Mach-O parsing, code signature verification, entitlement extraction, device
-state, Safari behaviour, and the App Store Connect API.
-
-See `aasadiff-integration.md` for where the line sits.
+Network fetching, `.well-known` lookup, Apple CDN behaviour, HTTP redirects and caching, `.ipa` or
+`.app` inspection, Mach-O parsing, code signature verification, entitlement extraction, device
+state, and the App Store Connect API. Those belong to
+[`blazingly-aasa-mcp`](https://github.com/sergii-ziborov/blazingly-aasa-mcp) and to tools like it.

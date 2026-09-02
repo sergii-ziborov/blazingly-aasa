@@ -1,0 +1,67 @@
+trailing-star	buy-star-vs-no-slash	{"/":"/buy/*"}	https://example.com/buy	0	Matched by pattern at index 0: { |   "/" : "/buy/*" | } |
+trailing-star	buy-star-vs-slash	{"/":"/buy/*"}	https://example.com/buy/	0	Matched by pattern at index 0: { |   "/" : "/buy/*" | } |
+trailing-star	buy-star-vs-child	{"/":"/buy/*"}	https://example.com/buy/42	0	Matched by pattern at index 0: { |   "/" : "/buy/*" | } |
+trailing-star	buy-star-vs-sibling	{"/":"/buy/*"}	https://example.com/buyer	0	Did not match. |
+trailing-star	buy-star-vs-prefix	{"/":"/buy/*"}	https://example.com/bu	0	Did not match. |
+trailing-star	deep-star-vs-no-slash	{"/":"/a/b/*"}	https://example.com/a/b	0	Matched by pattern at index 0: { |   "/" : "/a/b/*" | } |
+trailing-star	star-no-slash-vs-plain	{"/":"/buy*"}	https://example.com/buy	0	Matched by pattern at index 0: { |   "/" : "/buy*" | } |
+trailing-star	mid-star-vs-no-slash	{"/":"/a/*/c"}	https://example.com/a/c	0	Did not match. |
+trailing-star	exact-no-star	{"/":"/buy"}	https://example.com/buy	0	Matched by pattern at index 0: { |   "/" : "/buy" | } |
+trailing-star	exact-vs-trailing-slash	{"/":"/buy"}	https://example.com/buy/	0	Matched by pattern at index 0: { |   "/" : "/buy" | } |
+leading-slash	bare-abc-vs-slash-abc	{"/":"abc"}	https://example.com/abc	0	Matched by pattern at index 0: { |   "/" : "abc" | } |
+leading-slash	apple-doc-example	{"/":"abc","?":"def","#":"*"}	https://example.com/abc?def	0	Matched by pattern at index 0: { |   "?" : "def", |   "/" : "abc", |   "#" : "*" | } |
+leading-slash	bare-buy-star	{"/":"buy/*"}	https://example.com/buy/42	0	Matched by pattern at index 0: { |   "/" : "buy/*" | } |
+query-missing	star-on-absent-item	{"?":{"b":"*"}}	https://example.com/x?a=1	0	Matched by pattern at index 0: { |   "?" : { |     "b" : "*" |   } | } |
+query-missing	question-star-on-absent	{"?":{"b":"?*"}}	https://example.com/x?a=1	0	Did not match. |
+query-missing	empty-pattern-on-absent	{"?":{"b":""}}	https://example.com/x?a=1	0	Matched by pattern at index 0: { |   "?" : { |     "b" : "" |   } | } |
+query-missing	literal-on-absent	{"?":{"b":"1"}}	https://example.com/x?a=1	0	Did not match. |
+query-missing	star-on-empty-query	{"?":{"b":"*"}}	https://example.com/x	0	Matched by pattern at index 0: { |   "?" : { |     "b" : "*" |   } | } |
+query-missing	two-items-one-absent	{"?":{"a":"1","b":"*"}}	https://example.com/x?a=1	0	Matched by pattern at index 0: { |   "?" : { |     "a" : "1", |     "b" : "*" |   } | } |
+query-repeat	target-is-first	{"?":{"id":"42"}}	https://example.com/x?id=42&id=7	0	Did not match. |
+query-repeat	target-is-last	{"?":{"id":"42"}}	https://example.com/x?id=7&id=42	0	Did not match. |
+query-repeat	target-is-middle	{"?":{"id":"42"}}	https://example.com/x?id=7&id=42&id=9	0	Did not match. |
+query-nonstring	bool-true-value-present	{"?":{"flag":true}}	https://example.com/x?flag=1	0	Matched by pattern at index 0: { |   "?" : { |     "flag" : true |   } | } |
+query-nonstring	bool-true-item-absent	{"?":{"flag":true}}	https://example.com/x?other=1	0	Matched by pattern at index 0: { |   "?" : { |     "flag" : true |   } | } |
+query-nonstring	bool-false-value-present	{"?":{"flag":false}}	https://example.com/x?flag=1	0	Matched by pattern at index 0: { |   "?" : { |     "flag" : false |   } | } |
+query-nonstring	number-predicate	{"?":{"n":5}}	https://example.com/x?n=5	0	Matched by pattern at index 0: { |   "?" : { |     "n" : 5 |   } | } |
+query-nonstring	null-predicate	{"?":{"n":null}}	https://example.com/x?n=5	0	Matched by pattern at index 0: { |   "?" : { |     "n" : null |   } | } |
+percent	default-encoded-space	{"/":"/a%20b"}	https://example.com/a%20b	0	Matched by pattern at index 0: { |   "/" : "/a%20b" | } |
+percent	default-literal-space	{"/":"/a b"}	https://example.com/a%20b	0	Did not match. |
+percent	false-literal-space	{"/":"/a b","percentEncoded":false}	https://example.com/a%20b	0	Matched by pattern at index 0: { |   "/" : "/a b", |   "percentEncoded" : false | } |
+percent	false-encoded-pattern	{"/":"/a%20b","percentEncoded":false}	https://example.com/a%20b	0	Did not match. |
+percent	encoded-slash-default	{"/":"/a/b"}	https://example.com/a%2Fb	0	Did not match. |
+percent	encoded-slash-decoded	{"/":"/a/b","percentEncoded":false}	https://example.com/a%2Fb	0	Matched by pattern at index 0: { |   "/" : "/a/b", |   "percentEncoded" : false | } |
+percent	hex-case-default	{"/":"/caf%C3%A9"}	https://example.com/caf%c3%a9	0	Did not match. |
+percent	unicode-literal-false	{"/":"/caf\u00e9","percentEncoded":false}	https://example.com/caf%C3%A9	0	Matched by pattern at index 0: { |   "/" : "/café", |   "percentEncoded" : false | } |
+percent	unicode-literal-default	{"/":"/caf\u00e9"}	https://example.com/caf%C3%A9	0	Did not match. |
+fragment	star-on-absent-fragment	{"#":"*"}	https://example.com/x	0	Matched by pattern at index 0: { |   "#" : "*" | } |
+fragment	question-star-on-absent	{"#":"?*"}	https://example.com/x	0	Did not match. |
+fragment	empty-on-absent	{"#":""}	https://example.com/x	0	Matched by pattern at index 0: { |   "#" : "" | } |
+query-whole	whole-exact	{"?":"a=1"}	https://example.com/x?a=1	0	Matched by pattern at index 0: { |   "?" : "a=1" | } |
+query-whole	whole-rejects-extra	{"?":"a=1"}	https://example.com/x?a=1&b=2	0	Did not match. |
+query-whole	whole-star-on-empty	{"?":"*"}	https://example.com/x	0	Matched by pattern at index 0: { |   "?" : "*" | } |
+query-whole	whole-question-star-on-empty	{"?":"?*"}	https://example.com/x	0	Did not match. |
+lead	bare-abc-vs-abcd	{"/":"abc"}	https://example.com/abcd	0	Did not match. |
+lead	bare-abc-vs-xabc	{"/":"abc"}	https://example.com/xabc	0	Did not match. |
+lead	bare-abc-star	{"/":"abc/*"}	https://example.com/abc	0	Matched by pattern at index 0: { |   "/" : "abc/*" | } |
+lead	bare-star-abc	{"/":"*abc"}	https://example.com/xabc	0	Matched by pattern at index 0: { |   "/" : "*abc" | } |
+lead	double-slash-pattern	{"/":"//abc"}	https://example.com/abc	0	Matched by pattern at index 0: { |   "/" : "//abc" | } |
+lead	bare-deep	{"/":"a/b"}	https://example.com/a/b	0	Matched by pattern at index 0: { |   "/" : "a/b" | } |
+trail	pattern-trailing-slash	{"/":"/buy/"}	https://example.com/buy	0	Matched by pattern at index 0: { |   "/" : "/buy/" | } |
+trail	deep-pattern-trailing	{"/":"/a/b/"}	https://example.com/a/b	0	Matched by pattern at index 0: { |   "/" : "/a/b/" | } |
+trail	double-trailing-url	{"/":"/buy/*"}	https://example.com/buy//	0	Matched by pattern at index 0: { |   "/" : "/buy/*" | } |
+trail	star-vs-double-slash	{"/":"/buy/"}	https://example.com/buy//	0	Matched by pattern at index 0: { |   "/" : "/buy/" | } |
+trail	root-pattern	{"/":"/"}	https://example.com/	0	Matched by pattern at index 0: { |   "/" : "/" | } |
+trail	root-pattern-vs-empty	{"/":"/"}	https://example.com	0	Matched by pattern at index 0: { |   "/" : "/" | } |
+dup	star-on-duplicate	{"?":{"id":"*"}}	https://example.com/x?id=7&id=42	0	Matched by pattern at index 0: { |   "?" : { |     "id" : "*" |   } | } |
+dup	joined-forward	{"?":{"id":"7,42"}}	https://example.com/x?id=7&id=42	0	Did not match. |
+dup	joined-reverse	{"?":{"id":"42,7"}}	https://example.com/x?id=42&id=7	0	Did not match. |
+dup	empty-on-duplicate	{"?":{"id":""}}	https://example.com/x?id=7&id=42	0	Did not match. |
+dup	question-star-on-dup	{"?":{"id":"?*"}}	https://example.com/x?id=7&id=42	0	Matched by pattern at index 0: { |   "?" : { |     "id" : "?*" |   } | } |
+dup	identical-duplicates	{"?":{"id":"7"}}	https://example.com/x?id=7&id=7	0	Matched by pattern at index 0: { |   "?" : { |     "id" : "7" |   } | } |
+nonstr	string-still-applies	{"?":{"a":"1","flag":true}}	https://example.com/x?a=2	0	Matched by pattern at index 0: { |   "?" : { |     "a" : "1", |     "flag" : true |   } | } |
+nonstr	string-passes-with-bool	{"?":{"a":"1","flag":true}}	https://example.com/x?a=1	0	Matched by pattern at index 0: { |   "?" : { |     "a" : "1", |     "flag" : true |   } | } |
+nonstr	array-predicate	{"?":{"a":["1"]}}	https://example.com/x?a=2	0	Matched by pattern at index 0: { |   "?" : { |     "a" : [ |       "1" |     ] |   } | } |
+nonstr	object-predicate	{"?":{"a":{"b":"1"}}}	https://example.com/x?a=2	0	Matched by pattern at index 0: { |   "?" : { |     "a" : { |       "b" : "1" |     } |   } | } |
+whole	empty-pattern-no-query	{"?":""}	https://example.com/x	0	Matched by pattern at index 0: { |   "?" : "" | } |
+whole	literal-vs-no-query	{"?":"a=1"}	https://example.com/x	0	Did not match. |

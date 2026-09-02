@@ -1,0 +1,173 @@
+swcutil oracle run
+date:    2026-09-02T07:58:30Z
+macOS:   27.0 (26A5388g)
+host:    arm64
+
+=== swcutil --help ===
+swcutil [--leaks] [--verbose] <command> [options] [command [options] ...]
+  --leaks
+    Run leaks before termination.
+
+  --vmmap
+    Run vmmap before termination.
+
+  --heap
+    Run heap before termination.
+
+  --verbose
+    Increase verbosity of output.
+
+  dl -d <domain> [-t <timeout>]
+    Downloads an A-A-S-A file from a domain.
+    If specified, the timeout is in seconds.
+
+  get [-s <service>] [-a <app-id>] [-d <domain>]
+    Gets info about apps and/or domains.
+
+  openul -u <url> [-r <referrer-url>]
+    Open a URL as a universal link.
+
+  show
+    Show the current state.
+
+  verify [-d <domain>] -j <JSON-or-path> [-u <url>]
+    Verify apple-app-site-association files. Use -u to match a URL.
+
+  reset
+    Reset the database and restart swcd.
+
+  watch
+    Watch the system log for SWC logging.
+    Specify --verbose to enable debug-level logging.
+
+  match -u <url> -j <JSON-or-path>
+    Test a pattern-matching dictionary against a URL.
+
+  developer-mode -e <enabled>
+    Enable or disable developer mode.
+
+
+=== swcutil verify --help ===
+swcutil [--leaks] [--verbose] <command> [options] [command [options] ...]
+  --leaks
+    Run leaks before termination.
+
+  --vmmap
+    Run vmmap before termination.
+
+  --heap
+    Run heap before termination.
+
+  --verbose
+    Increase verbosity of output.
+
+  dl -d <domain> [-t <timeout>]
+    Downloads an A-A-S-A file from a domain.
+    If specified, the timeout is in seconds.
+
+  get [-s <service>] [-a <app-id>] [-d <domain>]
+    Gets info about apps and/or domains.
+
+  openul -u <url> [-r <referrer-url>]
+    Open a URL as a universal link.
+
+  show
+    Show the current state.
+
+  verify [-d <domain>] -j <JSON-or-path> [-u <url>]
+    Verify apple-app-site-association files. Use -u to match a URL.
+
+  reset
+    Reset the database and restart swcd.
+
+  watch
+    Watch the system log for SWC logging.
+    Specify --verbose to enable debug-level logging.
+
+  match -u <url> -j <JSON-or-path>
+    Test a pattern-matching dictionary against a URL.
+
+  developer-mode -e <enabled>
+    Enable or disable developer mode.
+
+
+=== discovered url flag: -u ===
+
+=== per-case results ===
+# name<TAB>domain<TAB>app_id<TAB>url<TAB>expected<TAB>swcutil_exit<TAB>swcutil_output
+apple/overview/buy-matches	example.com	ABCDE12345.com.example.app	https://example.com/buy/42	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/buy/42" matched. | { s = applinks, a = ABCDE12345.com.example.app2, d = example.com }: Pattern "https://example.com/buy/42" matched. |
+apple/overview/earlier-exclude-wins	example.com	ABCDE12345.com.example.app	https://example.com/buy/42#no_universal_links	exclude	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/buy/42#no_universal_links" blocked match. | { s = applinks, a = ABCDE12345.com.example.app2, d = example.com }: Pattern "https://example.com/buy/42#no_universal_links" blocked match. |
+apple/overview/specific-exclude-before-general	example.com	ABCDE12345.com.example.app	https://example.com/help/website/faq?articleNumber=4815	exclude	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/help/website/faq?articleNumber=4815" blocked match. | { s = applinks, a = ABCDE12345.com.example.app2, d = example.com }: Pattern "https://example.com/help/website/faq?articleNumber=4815" blocked match. |
+apple/overview/query-four-chars	example.com	ABCDE12345.com.example.app	https://example.com/help/123?articleNumber=4815	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/help/123?articleNumber=4815" matched. | { s = applinks, a = ABCDE12345.com.example.app2, d = example.com }: Pattern "https://example.com/help/123?articleNumber=4815" matched. |
+apple/overview/query-three-chars	example.com	ABCDE12345.com.example.app	https://example.com/help/123?articleNumber=481	no_match	0	Input JSON did not match input URL. |
+apple/overview/query-five-chars	example.com	ABCDE12345.com.example.app	https://example.com/help/123?articleNumber=48159	no_match	0	Input JSON did not match input URL. |
+apple/overview/query-item-absent	example.com	ABCDE12345.com.example.app	https://example.com/help/123	no_match	0	Input JSON did not match input URL. |
+apple/overview/unmatched-path	example.com	ABCDE12345.com.example.app	https://example.com/elsewhere	no_match	0	Input JSON did not match input URL. |
+apple/overview/second-app-id-also-matches	example.com	ABCDE12345.com.example.app2	https://example.com/buy/42	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/buy/42" matched. | { s = applinks, a = ABCDE12345.com.example.app2, d = example.com }: Pattern "https://example.com/buy/42" matched. |
+apple/overview/unlisted-app-never-matches	example.com	ZZZZZ99999.com.other.app	https://example.com/buy/42	no_match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/buy/42" matched. | { s = applinks, a = ABCDE12345.com.example.app2, d = example.com }: Pattern "https://example.com/buy/42" matched. |
+apple/components/all-specified-must-match	example.com	ABCDE12345.com.example.app	https://example.com/abc?def	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/abc?def" matched. |
+apple/components/missing-query-fails	example.com	ABCDE12345.com.example.app	https://example.com/abc	no_match	0	Input JSON did not match input URL. |
+apple/components/missing-path-fails	example.com	ABCDE12345.com.example.app	https://example.com?def	no_match	0	Input JSON did not match input URL. |
+defaults/unspecified-path-matches-anything	example.com	ABCDE12345.com.example.app	https://example.com/a/b?c=d#promo	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a/b?c=d#promo" matched. |
+defaults/absent-fragment-matches-star	example.com	ABCDE12345.com.example.app	https://example.com/a	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a" matched. |
+defaults/absent-fragment-fails-question-star	example.com	ABCDE12345.com.example.app	https://example.com/a	no_match	0	Input JSON did not match input URL. |
+wildcards/star-matches-empty	example.com	ABCDE12345.com.example.app	https://example.com/buy/	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/buy/" matched. |
+wildcards/star-crosses-slashes	example.com	ABCDE12345.com.example.app	https://example.com/buy/42/x	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/buy/42/x" matched. |
+wildcards/star-needs-the-literal-prefix	example.com	ABCDE12345.com.example.app	https://example.com/buy	no_match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/buy" matched. |
+wildcards/question-exact-count	example.com	ABCDE12345.com.example.app	https://example.com/id/4815	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/id/4815" matched. |
+wildcards/question-too-few	example.com	ABCDE12345.com.example.app	https://example.com/id/481	no_match	0	Input JSON did not match input URL. |
+wildcards/question-star-needs-one	example.com	ABCDE12345.com.example.app	https://example.com/a/	no_match	0	Input JSON did not match input URL. |
+wildcards/question-star-one-is-enough	example.com	ABCDE12345.com.example.app	https://example.com/a/b	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a/b" matched. |
+order/exclude-first-blocks	example.com	ABCDE12345.com.example.app	https://example.com/a/private/x	exclude	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a/private/x" blocked match. |
+order/general-rule-still-matches	example.com	ABCDE12345.com.example.app	https://example.com/a/public	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a/public" matched. |
+order/reversed-makes-exclude-unreachable	example.com	ABCDE12345.com.example.app	https://example.com/a/private/x	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a/private/x" matched. |
+defaults/rule-overrides-app	example.com	ABCDE12345.com.example.app	https://example.com/loose/1	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/loose/1" matched. |
+defaults/app-overrides-domain	example.com	ABCDE12345.com.example.app	https://example.com/strict/1	no_match	0	Input JSON did not match input URL. |
+defaults/app-level-exact-case-matches	example.com	ABCDE12345.com.example.app	https://example.com/Strict/1	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/Strict/1" matched. |
+defaults/case-sensitive-is-true-by-default	example.com	ABCDE12345.com.example.app	https://example.com/help/1	no_match	0	Input JSON did not match input URL. |
+query/whole-string-must-match-entirely	example.com	ABCDE12345.com.example.app	https://example.com/x?a=1	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/x?a=1" matched. |
+query/whole-string-rejects-extra-items	example.com	ABCDE12345.com.example.app	https://example.com/x?a=1&b=2	no_match	0	Input JSON did not match input URL. |
+query/dictionary-ignores-unnamed-items	example.com	ABCDE12345.com.example.app	https://example.com/x?a=1&b=2	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/x?a=1&b=2" matched. |
+query/dictionary-requires-named-item	example.com	ABCDE12345.com.example.app	https://example.com/x?b=2	no_match	0	Input JSON did not match input URL. |
+query/all-named-predicates-must-hold	example.com	ABCDE12345.com.example.app	https://example.com/x?a=1	no_match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/x?a=1" matched. |
+query/item-without-equals-is-empty	example.com	ABCDE12345.com.example.app	https://example.com/x?flag	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/x?flag" matched. |
+query/repeated-name-matches-any-occurrence	example.com	ABCDE12345.com.example.app	https://example.com/x?id=7&id=42	match	0	Input JSON did not match input URL. |
+query/non-string-predicate-never-matches	example.com	ABCDE12345.com.example.app	https://example.com/x?flag=1	no_match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/x?flag=1" matched. |
+encoding/default-compares-encoded-url	example.com	ABCDE12345.com.example.app	https://example.com/a%20b	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a%20b" matched. |
+encoding/default-rejects-decoded-pattern	example.com	ABCDE12345.com.example.app	https://example.com/a%20b	no_match	0	Input JSON did not match input URL. |
+encoding/false-decodes-the-url	example.com	ABCDE12345.com.example.app	https://example.com/a%20b	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a%20b" matched. |
+encoding/encoded-slash-is-not-a-separator	example.com	ABCDE12345.com.example.app	https://example.com/a%2Fb	no_match	0	Input JSON did not match input URL. |
+encoding/decoding-erases-the-slash-distinction	example.com	ABCDE12345.com.example.app	https://example.com/a%2Fb	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/a%2Fb" matched. |
+encoding/non-ascii-decoded	example.com	ABCDE12345.com.example.app	https://example.com/caf%C3%A9/menu	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/caf%C3%A9/menu" matched. |
+substitution/apple-reference-example	example.com	ABCDE12345.com.example.app	https://example.com/en_US/pizza/	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/en_US/pizza/" matched. |
+substitution/unlisted-value-fails	example.com	ABCDE12345.com.example.app	https://example.com/en_US/tacos/	no_match	0	Input JSON did not match input URL. |
+substitution/unknown-locale-fails	example.com	ABCDE12345.com.example.app	https://example.com/qq_ZZ/pizza/	no_match	0	Input JSON did not match input URL. |
+substitution/literal-text-is-not-the-variable	example.com	ABCDE12345.com.example.app	https://example.com/en_US/$(food)/	no_match	0	Input JSON did not match input URL. |
+substitution/region-uses-iso-not-prose	example.com	ABCDE12345.com.example.app	https://example.com/GB/home	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/GB/home" matched. |
+substitution/region-rejects-uk	example.com	ABCDE12345.com.example.app	https://example.com/UK/home	no_match	0	Input JSON did not match input URL. |
+substitution/class-digit-accepts	example.com	ABCDE12345.com.example.app	https://example.com/id/7	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/id/7" matched. |
+substitution/class-digit-rejects	example.com	ABCDE12345.com.example.app	https://example.com/id/x	no_match	0	Input JSON did not match input URL. |
+substitution/class-alpha-accepts	example.com	ABCDE12345.com.example.app	https://example.com/id/q	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/id/q" matched. |
+substitution/class-alpha-rejects	example.com	ABCDE12345.com.example.app	https://example.com/id/7	no_match	0	Input JSON did not match input URL. |
+substitution/class-upper-accepts	example.com	ABCDE12345.com.example.app	https://example.com/id/Q	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/id/Q" matched. |
+substitution/class-upper-rejects	example.com	ABCDE12345.com.example.app	https://example.com/id/q	no_match	0	Input JSON did not match input URL. |
+substitution/class-lower-accepts	example.com	ABCDE12345.com.example.app	https://example.com/id/q	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/id/q" matched. |
+substitution/class-lower-rejects	example.com	ABCDE12345.com.example.app	https://example.com/id/Q	no_match	0	Input JSON did not match input URL. |
+substitution/class-alnum-accepts	example.com	ABCDE12345.com.example.app	https://example.com/id/7	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/id/7" matched. |
+substitution/class-alnum-rejects	example.com	ABCDE12345.com.example.app	https://example.com/id/-	no_match	0	Input JSON did not match input URL. |
+substitution/class-xdigit-accepts	example.com	ABCDE12345.com.example.app	https://example.com/id/f	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/id/f" matched. |
+substitution/class-xdigit-rejects	example.com	ABCDE12345.com.example.app	https://example.com/id/g	no_match	0	Input JSON did not match input URL. |
+substitution/class-folds-when-case-insensitive	example.com	ABCDE12345.com.example.app	https://example.com/id/q	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/id/q" matched. |
+substitution/values-may-contain-wildcards	example.com	ABCDE12345.com.example.app	https://example.com/abcz/x	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/abcz/x" matched. |
+legacy/paths-positive	example.com	ABCDE12345.com.example.app	https://example.com/wwdc/2015	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/wwdc/2015" matched. |
+legacy/paths-not-exclusion	example.com	ABCDE12345.com.example.app	https://example.com/wwdc/internal/notes	exclude	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/wwdc/internal/notes" blocked match. |
+legacy/paths-unmatched	example.com	ABCDE12345.com.example.app	https://example.com/other	no_match	0	Input JSON did not match input URL. |
+legacy/details-as-dictionary	example.com	ABCDE12345.com.example.app	https://example.com/wwdc/news/	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/wwdc/news/" matched. |
+legacy/app-id-singular	example.com	ABCDE12345.com.example.app	https://example.com/x	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/x" matched. |
+host/other-host-never-matches	example.com	ABCDE12345.com.example.app	https://evil.test/anything	no_match	0	Input domain "example.com" did not match input URL's domain "evil.test". |
+host/comparison-is-case-insensitive	example.com	ABCDE12345.com.example.app	https://EXAMPLE.COM/x	match	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://EXAMPLE.COM/x" matched. |
+host/empty-domain-skips-the-check	example.com	ABCDE12345.com.example.app	https://anywhere.test/x	match	0	Input domain "example.com" did not match input URL's domain "anywhere.test". |
+services/webcredentials-only-never-matches-urls	example.com	ABCDE12345.com.example.app	https://example.com/x	no_match	0	{ s = webcredentials, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/x" matched. |
+
+=== done ===
+Results written to: /private/tmp/claude-501/-Users-serhiirihgt-dev-blazingly-json/5be80897-2b42-4a6d-99cf-adc0148126f9/scratchpad/oracle/results.txt

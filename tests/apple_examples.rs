@@ -138,18 +138,21 @@ fn detail_level_defaults_make_matching_case_insensitive() {
 #[test]
 fn every_specified_component_must_match() {
     // Apple: "https://www.example.com/abc?def matches, but https://www.example.com/abc and
-    // https://www.example.com?def don't." The two negatives are unambiguous, so they are asserted
-    // here. The positive is not: Apple writes the path pattern as `abc` while every other example
-    // writes `/buy/*`, and a URL path always starts with `/`. See docs/parity.md.
+    // https://www.example.com?def don't."
+    //
+    // All three are asserted, including the positive. The path pattern there is written `abc`
+    // with no leading slash, which this crate once treated as unmatchable -- `swcutil` says
+    // otherwise, so the documentation example is exactly right. See docs/parity.md.
     let aasa = fixture("apple/components-all-must-match.json");
 
+    expect(&aasa, DOMAIN, APP, "https://example.com/abc?def", Match);
     expect(&aasa, DOMAIN, APP, "https://example.com/abc", NoMatch);
     expect(&aasa, DOMAIN, APP, "https://example.com?def", NoMatch);
 
-    let report = aasa.validate();
     assert!(
-        report.contains(DiagnosticCode::PathPatternMissingLeadingSlash),
-        "the ambiguity is surfaced as a lint rather than guessed at:\n{report}"
+        aasa.validate().is_empty(),
+        "a bare path pattern is legal; the lint that used to fire here was wrong:\n{}",
+        aasa.validate()
     );
 }
 
@@ -256,7 +259,16 @@ fn legacy_details_dictionary_still_matches_and_is_flagged() {
         "https://example.com/videos/wwdc/2015/live",
         Match,
     );
-    expect(&aasa, DOMAIN, APP, "https://example.com/wwdc/news", NoMatch);
+    // A trailing slash is optional on both sides, so `/wwdc/news/` also matches `/wwdc/news`.
+    // Confirmed against swcutil; see conformance/oracle.
+    expect(&aasa, DOMAIN, APP, "https://example.com/wwdc/news", Match);
+    expect(
+        &aasa,
+        DOMAIN,
+        APP,
+        "https://example.com/wwdc/newsroom",
+        NoMatch,
+    );
 
     assert!(aasa
         .validate()
