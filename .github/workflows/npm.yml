@@ -26,6 +26,14 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
+      # The publishing identity decides the scope, and a mismatch is the difference between a
+      # successful publish and an opaque 404 on PUT. Print it.
+      - name: Report the publishing identity
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "publishing to npm as: $(npm whoami)"
+
       - run: ./bindings/wasm/build.sh
 
       # The same corpus the Rust suite runs. A binding that disagrees does not ship.
