@@ -3,3 +3,4 @@
 bindings/wasm/pkg/
 bindings/wasm/node_modules/
 .DS_Store
+npm/

@@ -44,14 +44,14 @@ jobs:
         if: github.ref_type == 'tag'
         shell: bash
         run: |
-          version="$(node -p "require('./bindings/wasm/pkg/package.json').version")"
+          version="$(node -p "require('./bindings/wasm/npm/package.json').version")"
           [[ "$GITHUB_REF_NAME" == "npm-v$version" ]] || {
             echo "tag $GITHUB_REF_NAME does not match package version $version" >&2
             exit 1
           }
 
       - name: Publish
-        working-directory: bindings/wasm/pkg
+        working-directory: bindings/wasm/npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public

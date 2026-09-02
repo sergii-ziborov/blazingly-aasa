@@ -9,13 +9,21 @@ crate knows nothing about JavaScript; the binding is a separate crate.
 ./bindings/wasm/build.sh
 ```
 
-Produces three packages from one Rust module, all published under the same name:
+Produces three wasm-pack builds and assembles them into **one** publishable package in `npm/`:
 
-| Directory | wasm-pack target | For |
+| Build | wasm-pack target | Reached by |
 | --- | --- | --- |
-| `pkg` | `bundler` | Vite, webpack, Rollup |
-| `pkg-node` | `nodejs` | Node ESM, Bun |
-| `pkg-web` | `web` | `<script type="module">`, no bundler |
+| `dist/bundler` | `bundler` | Vite, webpack, Rollup — the `default` condition |
+| `dist/node` | `nodejs` | Node and Bun — the `node` condition |
+| `dist/web` | `web` | `<script type="module">`, via the `./web` subpath |
+
+Publishing only the bundler build looks fine until someone runs it under Node, where importing a
+`.wasm` file is not something the runtime can do. Version 0.1.0 shipped that way and `npm install`
+plus `node` failed outright; 0.1.1 is the fix.
+
+The Node build is CommonJS, because that is what wasm-pack's `nodejs` target emits. It ships as
+`.cjs` so the format is stated rather than fought — the package is `"type": "module"`, and a `.js`
+file there would be read as ESM and fail on `module.exports`.
 
 Requires [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/).
 
@@ -46,10 +54,10 @@ try {
 `Aasa` owns memory inside the WebAssembly instance. Call `free()` when you are done — a `try/finally`
 is the reliable shape.
 
-In a browser with the `pkg-web` build, call the default export first:
+In a browser with no bundler, import the `./web` subpath and call the default export first:
 
 ```js
-import init, { Aasa } from "@sergii-ziborov/aasa";
+import init, { Aasa } from "@sergii-ziborov/aasa/web";
 await init();
 ```
 

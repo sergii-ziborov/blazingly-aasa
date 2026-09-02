@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## npm 0.1.1 - 2026-09-03
+
+Packaging only; the Rust crate is unchanged.
+
+- The published npm package contained the **bundler** build alone, so `npm install` followed by
+  `node` failed with `ERR_UNKNOWN_FILE_EXTENSION` on the `.wasm` import. Found by installing 0.1.0
+  from the registry and running it, which is the only way this class of bug shows up.
+- The package now carries all three builds behind conditional exports: Node and Bun resolve the
+  `nodejs` build, bundlers the `bundler` build, and `@sergii-ziborov/aasa/web` the browser build.
+- The Node build ships as `.cjs`, because wasm-pack's `nodejs` target emits CommonJS and the
+  package is `"type": "module"`.
+
 ## [0.1.0] - 2026-09-02
 
 First release. A semantic engine for Apple Associated Domains, usable from Rust and WebAssembly,
