@@ -70,8 +70,8 @@ serving. Those belong to the tools built on this crate; see
 
 ## Rust
 
-Not on crates.io yet — the parity table is honest about what is and is not verified, and that
-should settle before a version number becomes permanent. Until then:
+Not published yet — see [RELEASING.md](RELEASING.md) for what a release involves and why the order
+matters. Until then:
 
 ```toml
 [dependencies]
@@ -146,7 +146,8 @@ if !diff.is_equivalent() {
 
 ## JavaScript
 
-Not on npm yet; build it from the repository with `./bindings/wasm/build.sh`.
+Not on npm yet; build it from the repository with `./bindings/wasm/build.sh`, which writes a
+publishable `@blazingly/aasa` package into `bindings/wasm/pkg`.
 
 ```js
 import { Aasa } from "@blazingly/aasa";
@@ -316,7 +317,7 @@ verified against `swcutil`, with the same diagnostics, traces, and diff — rath
 implementation that will drift, which is exactly what the pure-JS tools in the comparison above
 turned out to be.
 
-Payload: 345 KB raw, 141 KB gzip, 113 KB brotli.
+Payload: 358 KB raw, 144 KB gzip, 115 KB brotli.
 
 ## Correctness
 

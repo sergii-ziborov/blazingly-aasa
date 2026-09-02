@@ -1,0 +1,50 @@
+# Publishes @blazingly/aasa. Manual and tag-gated for the same reason the crates.io workflow is:
+# an npm version cannot be replaced once published.
+name: Publish npm
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "npm-v*"
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: jetli/wasm-pack-action@v0.4.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - run: ./bindings/wasm/build.sh
+
+      # The same corpus the Rust suite runs. A binding that disagrees does not ship.
+      - run: node bindings/wasm/tests/node.test.mjs
+      - run: node bindings/wasm/tests/conformance.mjs
+
+      - name: Verify the tag matches the package version
+        if: github.ref_type == 'tag'
+        shell: bash
+        run: |
+          version="$(node -p "require('./bindings/wasm/pkg/package.json').version")"
+          [[ "$GITHUB_REF_NAME" == "npm-v$version" ]] || {
+            echo "tag $GITHUB_REF_NAME does not match package version $version" >&2
+            exit 1
+          }
+
+      - name: Publish
+        working-directory: bindings/wasm/pkg
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public

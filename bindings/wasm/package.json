@@ -1,7 +1,7 @@
 {
   "name": "@blazingly/aasa",
   "version": "0.1.0",
-  "description": "Apple Associated Domains (apple-app-site-association) semantics: parse, validate, match, explain, and diff — compiled to WebAssembly",
+  "description": "Apple Associated Domains (apple-app-site-association) semantics: parse, validate, match, explain, and diff \u2014 compiled to WebAssembly",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -9,7 +9,9 @@
     "directory": "bindings/wasm"
   },
   "homepage": "https://github.com/sergii-ziborov/blazingly-aasa#readme",
-  "bugs": { "url": "https://github.com/sergii-ziborov/blazingly-aasa/issues" },
+  "bugs": {
+    "url": "https://github.com/sergii-ziborov/blazingly-aasa/issues"
+  },
   "keywords": [
     "aasa",
     "apple-app-site-association",
@@ -18,6 +20,5 @@
     "deeplink",
     "ios",
     "wasm"
-  ],
-  "sideEffects": ["./snippets/*"]
+  ]
 }

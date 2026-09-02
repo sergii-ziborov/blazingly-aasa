@@ -3,7 +3,10 @@
 All notable changes to this project are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-09-02
+
+First release. A semantic engine for Apple Associated Domains, usable from Rust and WebAssembly,
+with its matching behaviour verified against Apple's own `swcutil`.
 
 ### Verified against Apple's swcutil
 
@@ -97,10 +100,6 @@ ordering, `exclude`, wildcards, and the defaults hierarchy. It scores 10/20 on s
 variables — and all ten passes are cases expecting `no_match`, which any implementation that
 silently matches nothing passes for free. **No surveyed tool expands `$(...)` at all.**
 
-## [0.1.0] - 2026-09-01
-
-First release. A semantic engine for Apple Associated Domains, usable from Rust and WebAssembly.
-
 ### Parsing
 
 - `AasaDocument::parse` for `apple-app-site-association` bytes, built on `blazingly-json` with no
@@ -150,12 +149,11 @@ First release. A semantic engine for Apple Associated Domains, usable from Rust 
 
 ### Known limits
 
-- No behaviour has been verified against Apple's `swcutil` yet. `docs/parity.md` marks every
-  behaviour as either documented by Apple or decided by this crate, and
-  `scripts/oracle_swcutil.sh` runs the differential check on macOS.
-- `percentEncoded` is the least settled area; the chosen reading is documented and tested but not
-  oracle-checked.
-- `$(region)` does not match `UK`, which Apple's prose gives as an example — `Locale.isoRegionCodes`
-  contains `GB` and not `UK`. Pinned by a test.
+- `AASA142`, `AASA144`, simple non-ASCII case folding, and reading a CMS signature without
+  verifying it remain **decided** rather than **oracle**: `swcutil` has no way to answer them.
+- `$(region)` does not match `UK`, which Apple's prose gives as an example. `Locale.isoRegionCodes`
+  contains `GB` and not `UK`, and `swcutil` agrees. Pinned by a test.
+- The `$(region)` and `$(lang)` tables are a snapshot of one Foundation release; `ISO_TABLE_SOURCE`
+  reports which.
 
 [0.1.0]: https://github.com/sergii-ziborov/blazingly-aasa/releases/tag/v0.1.0

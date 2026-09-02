@@ -9,7 +9,7 @@ crate knows nothing about JavaScript; the binding is a separate crate.
 ./bindings/wasm/build.sh
 ```
 
-Produces three packages from one Rust module:
+Produces three packages from one Rust module, all published under the same name:
 
 | Directory | wasm-pack target | For |
 | --- | --- | --- |
@@ -18,6 +18,11 @@ Produces three packages from one Rust module:
 | `pkg-web` | `web` | `<script type="module">`, no bundler |
 
 Requires [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/).
+
+`wasm-pack` generates each `pkg/package.json` from the **Rust crate name**, which would publish
+this as `blazingly-aasa-wasm`. `build.sh` merges the intended npm metadata — the scoped name,
+keywords, homepage — from `bindings/wasm/package.json`, which is the source of truth for anything
+npm-facing. Without that step `npm install @blazingly/aasa` would 404.
 
 ## Using it
 
@@ -116,7 +121,7 @@ Handle-free convenience functions — `validateAasa`, `matchAasa`, `diffAasa`, `
 
 ## Payload size
 
-Roughly 345 KB raw, 141 KB gzipped, 113 KB brotli. Most of it is the JSON engine and
+Roughly 358 KB raw, 144 KB gzipped, 115 KB brotli. Most of it is the JSON engine and
 `serde-wasm-bindgen`; the ISO region and language tables are about 15 KB.
 
 `panic = "abort"` was measured and made the module *larger*, so it is not used — `wasm-opt` already
