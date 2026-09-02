@@ -142,7 +142,7 @@ silently matches nothing passes for free. **No surveyed tool expands `$(...)` at
 
 ### WebAssembly
 
-- `@blazingly/aasa` with a persistent handle, so the compiled document stays inside WebAssembly and
+- `@sergii-ziborov/aasa` with a persistent handle, so the compiled document stays inside WebAssembly and
   only small values cross the boundary.
 - Batch entry points, including `decideLines` for one string encode per batch.
 - Bundler, Node, and browser packages from one Rust module; tested on Node and Bun.

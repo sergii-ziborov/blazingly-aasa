@@ -14,7 +14,7 @@ obstacle.
 ```
 blazingly-aasa (crates.io)  ->  blazingly-aasa-mcp (crates.io)
        |
-       +-> @blazingly/aasa (npm)
+       +-> @sergii-ziborov/aasa (npm)
 ```
 
 ## Before releasing anything
@@ -55,8 +55,12 @@ cargo publish -p blazingly-aasa
 
 ## 2. The npm package
 
-One-time: the `@blazingly` scope must exist on npm and the account must own it. Add an npm
-automation token as the repository secret `NPM_TOKEN`.
+One-time: add an npm **automation** token as the repository secret `NPM_TOKEN`. A classic
+"Publish" token fails with `EOTP` in CI even when the account has no authenticator app; automation
+and granular tokens do not.
+
+The package sits in the publishing account's personal scope, which always exists. An organisation
+scope has to be created first, or npm answers a bare `404` on `PUT` that says nothing about why.
 
 ```bash
 ./bindings/wasm/build.sh

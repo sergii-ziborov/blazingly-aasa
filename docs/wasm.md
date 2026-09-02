@@ -1,6 +1,6 @@
 # WebAssembly
 
-`bindings/wasm` compiles the engine to WebAssembly and publishes it as `@blazingly/aasa`. The core
+`bindings/wasm` compiles the engine to WebAssembly and publishes it as `@sergii-ziborov/aasa`. The core
 crate knows nothing about JavaScript; the binding is a separate crate.
 
 ## Building
@@ -22,12 +22,12 @@ Requires [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/).
 `wasm-pack` generates each `pkg/package.json` from the **Rust crate name**, which would publish
 this as `blazingly-aasa-wasm`. `build.sh` merges the intended npm metadata — the scoped name,
 keywords, homepage — from `bindings/wasm/package.json`, which is the source of truth for anything
-npm-facing. Without that step `npm install @blazingly/aasa` would 404.
+npm-facing. Without that step `npm install @sergii-ziborov/aasa` would 404.
 
 ## Using it
 
 ```js
-import { Aasa } from "@blazingly/aasa";
+import { Aasa } from "@sergii-ziborov/aasa";
 
 const response = await fetch("https://example.com/.well-known/apple-app-site-association");
 const aasa = Aasa.compile(new Uint8Array(await response.arrayBuffer()), "example.com");
@@ -49,7 +49,7 @@ is the reliable shape.
 In a browser with the `pkg-web` build, call the default export first:
 
 ```js
-import init, { Aasa } from "@blazingly/aasa";
+import init, { Aasa } from "@sergii-ziborov/aasa";
 await init();
 ```
 
