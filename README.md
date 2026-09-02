@@ -5,6 +5,9 @@ and diff `apple-app-site-association` policy.
 
 [![CI](https://github.com/sergii-ziborov/blazingly-aasa/actions/workflows/ci.yml/badge.svg)](https://github.com/sergii-ziborov/blazingly-aasa/actions/workflows/ci.yml)
 [![WebAssembly](https://github.com/sergii-ziborov/blazingly-aasa/actions/workflows/wasm.yml/badge.svg)](https://github.com/sergii-ziborov/blazingly-aasa/actions/workflows/wasm.yml)
+[![crates.io](https://img.shields.io/crates/v/blazingly-aasa.svg)](https://crates.io/crates/blazingly-aasa)
+[![docs.rs](https://img.shields.io/docsrs/blazingly-aasa)](https://docs.rs/blazingly-aasa)
+[![npm](https://img.shields.io/npm/v/@blazingly/aasa)](https://www.npmjs.com/package/@blazingly/aasa)
 ![MSRV 1.78](https://img.shields.io/badge/MSRV-1.78-blue)
 ![license MIT](https://img.shields.io/badge/license-MIT-blue)
 
@@ -43,14 +46,20 @@ closest failure:
          pattern did not match
 ```
 
+And it is the only implementation whose answers have been checked against Apple's own tooling.
+**139 of its 140 conformance cases are verified against `swcutil`**, with the raw runs committed in
+[`conformance/oracle`](conformance/oracle). That check found four places where this crate was
+wrong, including one it had been confident enough about to ship as a lint —
+[docs/parity.md](docs/parity.md) has each of them.
+
 ## What it does
 
 - **Parses** every shape in the wild — modern `components`, legacy `paths` with `NOT ` exclusions,
   and the oldest `details`-as-a-dictionary form — leniently, so one broken entry never hides the
   rest of the file.
-- **Validates** with stable, machine-readable `AASA###` codes: unreachable rules, catch-alls that
-  open a whole domain by accident, path patterns that can never match, recursive substitution
-  variables, mixed legacy and modern formats.
+- **Validates** with 27 stable, machine-readable `AASA###` codes: unreachable rules, catch-alls
+  that open a whole domain by accident, recursive substitution variables, a single non-string
+  query predicate that silently voids every constraint beside it, mixed legacy and modern formats.
 - **Matches** a URL for an app, with full trace: which detail entry, which rule index, what the
   effective `caseSensitive` and `percentEncoded` were, and exactly which component failed.
 - **Compares** two files semantically — behaviour, not bytes. Hoisting `caseSensitive` into
@@ -70,12 +79,9 @@ serving. Those belong to the tools built on this crate; see
 
 ## Rust
 
-Not published yet — see [RELEASING.md](RELEASING.md) for what a release involves and why the order
-matters. Until then:
-
 ```toml
 [dependencies]
-blazingly-aasa = { git = "https://github.com/sergii-ziborov/blazingly-aasa" }
+blazingly-aasa = "0.1"
 ```
 
 ```rust
@@ -146,8 +152,9 @@ if !diff.is_equivalent() {
 
 ## JavaScript
 
-Not on npm yet; build it from the repository with `./bindings/wasm/build.sh`, which writes a
-publishable `@blazingly/aasa` package into `bindings/wasm/pkg`.
+```bash
+npm install @blazingly/aasa
+```
 
 ```js
 import { Aasa } from "@blazingly/aasa";
@@ -204,9 +211,11 @@ nothing, and the check stays green.
 
 ## The conformance corpus
 
-`conformance/cases.json` is 73 matching and 14 validation cases, each tagged with the feature it
-covers, a link to the Apple page that documents it, and whether the behaviour is **documented** by
-Apple or **decided** by this crate.
+`conformance/cases.json` is 140 matching and 13 validation cases, each tagged with the feature it
+covers, a link to the Apple page that documents it, and whether the behaviour is **oracle**-checked
+against `swcutil`, merely **documented** by Apple, or **decided** by this crate. 139 of the 140 are
+oracle-checked; the one exception is this crate's own convention that an empty domain skips the host
+check, which `swcutil` has no way to express.
 
 The Rust suite and the WebAssembly suite both run it, so a binding bug cannot hide behind passing
 Rust tests. It is published rather than kept internal, because a shared corpus is how the whole
@@ -348,7 +357,7 @@ The lint was removed, its number retired, and the documentation example it contr
 as a test. The others were a missing query item, a repeated query name, and a non-string predicate —
 see [docs/parity.md](docs/parity.md) for each.
 
-The test suite is 90-odd tests across Apple's documented examples, parsing, validation, matching,
+The test suite is 114 tests across Apple's documented examples, parsing, validation, matching,
 percent-encoding, and semantic diff — plus property tests that check the pattern matcher against a
 deliberately naive exponential reference implementation, that parsing arbitrary bytes never panics,
 and that the fast decision path never disagrees with the tracing one.
