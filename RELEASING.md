@@ -39,8 +39,7 @@ behind it in `conformance/oracle`.
 
 ## 1. The library, to crates.io
 
-One-time: add a crates.io API token as the repository secret `CARGO_REGISTRY_TOKEN`, under an
-environment named `crates-io`.
+One-time: add a crates.io API token as the repository secret `CARGO_REGISTRY_TOKEN`.
 
 ```bash
 cargo publish -p blazingly-aasa --dry-run
