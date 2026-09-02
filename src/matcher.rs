@@ -9,7 +9,7 @@
 //! string per compared component. Use the first in a hot loop and the second when a human needs to
 //! understand the answer.
 
-use crate::compile::{CompiledAasa, CompiledQuery, CompiledRule};
+use crate::compile::{CompiledAasa, CompiledPath, CompiledQuery, CompiledRule};
 use crate::error::UrlError;
 use crate::explain::{
     ComponentReason, ComponentTrace, DetailTrace, MatchDecision, MatchResult, MatchTrace,
@@ -45,7 +45,10 @@ impl<'a> Items<'a> {
 /// The percent-decoded forms, built only when some rule actually asks for them.
 struct Decoded {
     path: String,
-    path_forms: Vec<String>,
+    /// Trailing slash run removed, computed once per match rather than once per rule.
+    trimmed: String,
+    /// The trimmed path without its leading slash, when it has one.
+    bare: Option<String>,
     query: String,
     fragment: String,
     items: Vec<(String, String)>,
@@ -54,7 +57,11 @@ struct Decoded {
 /// The URL components a rule can be compared against.
 struct Inputs<'a> {
     path: &'a str,
-    path_forms: Vec<String>,
+    /// Trailing slash run removed. Precomputed: a rule loop that trims the path per rule spends
+    /// more time scanning the same string than it does matching.
+    trimmed: &'a str,
+    /// The trimmed path without its leading slash, for the rare pattern that lacks one.
+    bare: Option<&'a str>,
     query: &'a str,
     fragment: &'a str,
     items: Vec<(&'a str, &'a str)>,
@@ -69,19 +76,27 @@ impl<'a> Inputs<'a> {
         } else {
             Vec::new()
         };
-        let decoded = needs_decoded.then(|| Decoded {
-            path_forms: crate::url::path_forms(&percent_decode(parts.path())),
-            path: percent_decode(parts.path()),
-            query: percent_decode(parts.query()),
-            fragment: percent_decode(parts.fragment()),
-            items: items
-                .iter()
-                .map(|(name, value)| (percent_decode(name), percent_decode(value)))
-                .collect(),
+        let decoded = needs_decoded.then(|| {
+            let path = percent_decode(parts.path());
+            let trimmed = crate::url::trim_path(&path).to_owned();
+            let bare = crate::url::strip_leading_slash(&trimmed).map(str::to_owned);
+            Decoded {
+                path,
+                trimmed,
+                bare,
+                query: percent_decode(parts.query()),
+                fragment: percent_decode(parts.fragment()),
+                items: items
+                    .iter()
+                    .map(|(name, value)| (percent_decode(name), percent_decode(value)))
+                    .collect(),
+            }
         });
+        let trimmed = crate::url::trim_path(parts.path());
         Self {
             path: parts.path(),
-            path_forms: crate::url::path_forms(parts.path()),
+            trimmed,
+            bare: crate::url::strip_leading_slash(trimmed),
             query: parts.query(),
             fragment: parts.fragment(),
             items,
@@ -96,13 +111,19 @@ impl<'a> Inputs<'a> {
         }
     }
 
-    /// Every form of the path a `/` pattern may be compared against.
-    ///
-    /// Apple treats the leading and trailing slash as optional; see [`crate::path_forms`].
-    fn path_forms_for(&self, percent_encoded: bool) -> &[String] {
+    /// The path with any trailing slash run removed, which is the form patterns compare against.
+    fn trimmed_path_for(&self, percent_encoded: bool) -> &str {
         match (percent_encoded, &self.decoded) {
-            (false, Some(decoded)) => &decoded.path_forms,
-            _ => &self.path_forms,
+            (false, Some(decoded)) => &decoded.trimmed,
+            _ => self.trimmed,
+        }
+    }
+
+    /// The same path without its leading slash, for the rare pattern that lacks one.
+    fn bare_path_for(&self, percent_encoded: bool) -> Option<&str> {
+        match (percent_encoded, &self.decoded) {
+            (false, Some(decoded)) => decoded.bare.as_deref(),
+            _ => self.bare,
         }
     }
 
@@ -372,14 +393,10 @@ fn rule_matches(rule: &CompiledRule, inputs: &Inputs<'_>) -> bool {
     let effective = rule.effective;
     let case_sensitive = effective.case_sensitive;
 
-    if let Some(patterns) = &rule.path {
-        let forms = inputs.path_forms_for(effective.percent_encoded);
-        let matched = patterns.iter().any(|pattern| {
-            forms
-                .iter()
-                .any(|form| pattern.matches_with(form, case_sensitive))
-        });
-        if !matched {
+    if let Some(path) = &rule.path {
+        let trimmed = inputs.trimmed_path_for(effective.percent_encoded);
+        let bare = inputs.bare_path_for(effective.percent_encoded);
+        if !path.matches(trimmed, bare, case_sensitive) {
             return false;
         }
     }
@@ -452,7 +469,8 @@ fn evaluate(rule: &CompiledRule, inputs: &Inputs<'_>) -> RuleTrace {
     components.push(compare_path(
         rule.path.as_ref(),
         inputs.path_for(effective.percent_encoded),
-        inputs.path_forms_for(effective.percent_encoded),
+        inputs.trimmed_path_for(effective.percent_encoded),
+        inputs.bare_path_for(effective.percent_encoded),
         effective,
     ));
 
@@ -587,14 +605,15 @@ fn compare_query_item(
     }
 }
 
-/// Compares the path against every form Apple accepts, reporting the one that matched.
+/// Compares the path against every form Apple accepts, reporting the pattern as written.
 fn compare_path(
-    patterns: Option<&Vec<Pattern>>,
+    path_pattern: Option<&CompiledPath>,
     path: &str,
-    forms: &[String],
+    trimmed: &str,
+    bare: Option<&str>,
     effective: EffectiveDefaults,
 ) -> ComponentTrace {
-    let Some(patterns) = patterns else {
+    let Some(path_pattern) = path_pattern else {
         return ComponentTrace {
             component: UrlComponent::Path,
             pattern: None,
@@ -603,35 +622,20 @@ fn compare_path(
             reason: ComponentReason::Unconstrained,
         };
     };
-    let display = patterns
-        .first()
-        .map(|pattern| pattern.source().to_owned())
-        .unwrap_or_default();
-    for pattern in patterns {
-        for form in forms {
-            let (matched, reason) = decide_component(pattern, form, effective.case_sensitive);
-            if matched {
-                return ComponentTrace {
-                    component: UrlComponent::Path,
-                    pattern: Some(display),
-                    input: path.to_owned(),
-                    matched: true,
-                    reason,
-                };
-            }
-        }
-    }
-    let reason = patterns
-        .first()
-        .map_or(ComponentReason::PatternMismatch, |pattern| {
-            decide_component(pattern, path, effective.case_sensitive).1
-        });
+    let matched = path_pattern.matches(trimmed, bare, effective.case_sensitive);
+    // Report the reason from the pattern as written, which is the one a reader recognises.
+    let (_, reason) = decide_component(&path_pattern.pattern, trimmed, effective.case_sensitive);
     ComponentTrace {
         component: UrlComponent::Path,
-        pattern: Some(display),
+        pattern: Some(path_pattern.source().to_owned()),
         input: path.to_owned(),
-        matched: false,
-        reason,
+        matched,
+        reason: if matched && reason == ComponentReason::PatternMismatch {
+            // A parent-path or bare-path form matched where the primary did not.
+            ComponentReason::Wildcard
+        } else {
+            reason
+        },
     }
 }
 

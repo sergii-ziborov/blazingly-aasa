@@ -220,115 +220,101 @@ passes every `expect: no_match` case, and a comparison that hides this overstate
 
 ## Performance
 
-Measured on an Apple M4, macOS 27.0, rustc 1.96.1, criterion with 3 s warm-up and 8 s measurement;
-JavaScript on Node 22.13. Reproduce with `cargo bench` and `node bindings/wasm/bench/bench.mjs`.
+Apple M4, macOS 27.0, rustc 1.96.1, criterion. **Every figure is a ratio against a baseline
+measured in the same run**, because absolute numbers on a shared machine are not comparable across
+runs — in one pair of runs here the untouched `regex` baseline itself moved by 2.8x. Reproduce with
+`cargo bench` and `node bindings/wasm/bench/bench.mjs`.
 
-There is no established Rust crate implementing AASA semantics, so the baseline is what a competent
-engineer would actually build: **`serde_json` for parsing plus the `regex` crate for wildcards**
-(`*` → `.*`, `?` → `.`, anchored) — which is how nearly every AASA checker in the wild works. Both
-sides use the same URL splitter, so the numbers reflect AASA work rather than URL parsing. The
-benchmark corpus deliberately contains no `$(...)` references, because the regex baseline does not
-implement substitution variables and would otherwise be credited for skipping work.
-
-**Where this crate wins, and where it doesn't:**
+The baseline is what a competent engineer would actually build: **`serde_json` for parsing plus the
+`regex` crate for wildcards**, which is how nearly every AASA checker in the wild works. Both sides
+use the same URL splitter. The corpus contains no `$(...)`, because the baseline does not implement
+substitution variables and would otherwise be credited for skipping work.
 
 ### Matching one pattern
 
-| Pattern | blazingly-aasa | serde_json + regex | |
-| --- | --- | --- | --- |
-| `/help/website/faq` (literal) | **2.61 ns** | 15.3 ns | **5.9x** |
-| `/buy/*` (prefix) | **3.55 ns** | 60.8 ns | **17x** |
-| `*/checkout` (suffix) | **3.34 ns** | 69.1 ns | **21x** |
-| `/id/????` | 10.5 ns | 10.2 ns | — |
-| `/id/$(digit)$(digit)$(digit)$(digit)` | 15.1 ns | 9.88 ns | 0.65x |
-| `/a/*/b/?*/c` | 20.7 ns | 13.0 ns | 0.63x |
-| `*a*a…*b` on 512 `a`s (adversarial) | 942 ns | 605 ns | 0.64x |
+| Pattern | vs `regex` |
+| --- | --- |
+| `/help/website/faq` (literal) | **6.4x faster** |
+| `/buy/*` (prefix) | **22x faster** |
+| `*/checkout` (suffix) | **18x faster** |
+| `/id/????` | 1.7x slower |
+| `/id/$(digit)$(digit)$(digit)$(digit)` | 1.7x slower |
+| `/a/*/b/?*/c` | 2.3x slower |
+| `*a*a…*b` on 512 `a`s (adversarial) | 1.7x slower |
 
-The first three shapes cover almost every pattern in a real association file, and they take
+The first three shapes cover almost every pattern in a real association file and take
 allocation-free string tests. On genuinely general patterns a mature DFA beats a glob matcher by
-about 1.6x — that is the honest cost of not shipping a regex engine, and the adversarial row shows
-neither engine degrades catastrophically.
+under 2.5x — the honest cost of not shipping a regex engine — and the adversarial row shows neither
+engine degrades catastrophically.
 
-### Compiling patterns
+### Compiling
 
-| Pattern | blazingly-aasa | serde_json + regex | |
-| --- | --- | --- | --- |
-| `/help/website/faq` | **207 ns** | 5.57 µs | **27x** |
-| `/buy/*` | **152 ns** | 17.2 µs | **113x** |
-| `/id/????` | **128 ns** | 22.7 µs | **177x** |
-| `*a*a…*b` | **1.35 µs** | 50.5 µs | **37x** |
+| | vs `regex` |
+| --- | --- |
+| one pattern (literal / prefix / `????` / mixed) | **25x – 295x faster** |
+| a 0.4 KiB document | **22x faster** |
+| a 5 KiB document, 128 rules | **24x faster** |
+| a 38 KiB document, 1024 rules | **28x faster** |
 
-An association file compiles every pattern it contains, once, before matching anything. This is
-where the regex dependency actually costs.
+Read the document rows next to this one, because most of that gap is the regex compiler rather than
+the JSON parser:
 
-### Parsing and compiling a document
-
-| Document | blazingly-aasa | serde_json + regex | |
-| --- | --- | --- | --- |
-| 0.4 KiB, 8 rules | **7.52 µs** | 216 µs | **29x** |
-| 5 KiB, 128 rules | **93.1 µs** | 3.49 ms | **37x** |
-| 38 KiB, 1024 rules | **695 µs** | 28.7 ms | **41x** |
-
-Read that with the next table, not on its own — most of the gap is the regex compiler, not the JSON
-parser:
-
-| JSON parse only | blazingly-json | serde_json | |
-| --- | --- | --- | --- |
-| 0.4 KiB | **1.75 µs** | 2.00 µs | 1.14x |
-| 5 KiB | **19.5 µs** | 23.4 µs | 1.20x |
-| 38 KiB | **143 µs** | 178 µs | 1.24x |
+| JSON parse only | `blazingly-json` vs `serde_json` |
+| --- | --- |
+| 0.4 KiB / 5 KiB / 38 KiB | 1.13x / 1.18x / 1.33x faster |
 
 ### Matching a real document
 
-8 URLs against 8 apps x 16 rules:
+**This is where the crate is slower than the baseline, and the reason is worth stating plainly.**
+
+| | vs `serde_json` + `regex` |
+| --- | --- |
+| 8 URLs against 8 apps x 16 rules | 1.7x slower |
+| a miss scanned across 1 / 8 / 32 app entries | 1.9x / 2.0x / 1.7x slower |
+
+Before this crate was checked against Apple's `swcutil` it was at parity here — 0.99x, 1.00x, 1.00x
+on those same rows. It got slower by getting correct. `swcutil` settled four behaviours the
+baseline does not implement at all:
+
+* a pattern ending in `/*` also matches the parent path, so `/buy/*` needs two comparisons;
+* every occurrence of a repeated query name must match, so the predicate loop cannot stop at the
+  first hit;
+* a missing query item counts as present with an empty value, so absence is a comparison rather
+  than an immediate reject;
+* the leading slash of a pattern is optional.
+
+The baseline is faster partly because it is wrong. A comparison that omitted that would be
+measuring less work, not better work.
+
+Two things did come back from the first, naive version of those rules: trimming the path once per
+match instead of once per rule, and deciding at compile time that a `/`-rooted pattern can never
+match a path without one. That took the regression from 5.9x down to under 2x.
 
 | | |
 | --- | --- |
-| `decide`, pre-split URLs | 861 ns |
-| same, `serde_json` + `regex` baseline | 759 ns |
-| `decide`, splitting the URL too | 1.37 µs |
-| `match_url` with a full trace | 11.8 µs |
+| `compiled.decide(...)` vs reparsing per call | **916x faster** |
+| `decide` vs `match_url` with a full trace | trace costs ~11x |
 
-**Matching a document is a wash** — this crate and the regex baseline land within ~13% of each
-other, and on a scan-heavy miss they are identical to within noise (165 ns vs 166 ns across 32 app
-entries). The advantage is in getting there, not in the loop.
-
-The trace costs about 14x the bare decision, which is why `decide` and `match_url` are separate
-calls rather than one function with a flag.
-
-### Reusing the compiled handle
-
-| | |
-| --- | --- |
-| `compiled.decide(...)` | **134 ns** |
-| `blazingly_aasa::match_url(bytes, ...)`, reparsing each call | 94.6 µs |
-
-**706x.** Parse once, match many — the one-shot helpers exist for convenience, not for loops.
-
-### Validation
-
-Full lint of the same documents: 517 ns (0.4 KiB), 6.68 µs (5 KiB), 48.6 µs (38 KiB). Cheap enough
-to run on every request if you want to.
+Parse once, match many. The trace is why `decide` and `match_url` are separate calls rather than one
+function with a flag.
 
 ### WebAssembly against pure JavaScript
 
 Against a `JSON.parse` + `RegExp` implementation — the JavaScript equivalent of the Rust baseline:
 
-| | WebAssembly | pure JS | |
-| --- | --- | --- | --- |
-| compile 5 KiB | **76.3 µs** | 161 µs | **2.1x** |
-| compile 38 KiB | **581 µs** | 1.26 ms | **2.2x** |
-| match, 1 URL per call | 442 ns | **291 ns** | 0.79x |
-| match, `decideLines` batch of 64+ | **349 ns** | 435 ns | **1.25x** |
+| | WebAssembly vs pure JS |
+| --- | --- |
+| compile 0.4 KiB / 5 KiB / 38 KiB | 0.71x / 0.66x / 1.19x |
+| match, `decideLines` batch | 0.82x – 1.20x |
 
-This is the part most WebAssembly libraries do not tell you: **matching one URL at a time is
-_slower_ than pure JavaScript**, because moving a string across the boundary costs more than
-matching it, and that cost is per string — it does not amortise. `decideLines` takes the whole
-batch as one string, which is as far as that goes: 1.25x, not 10x.
+**Roughly a wash, and sometimes worse.** Moving a string across the boundary costs more than
+matching it, and that cost is per string, so it does not amortise over a batch. The earlier ~2x
+compile advantage narrowed when compilation took on the parent-path form.
 
-Compilation is genuinely ~2x faster. But the real reason to use the WebAssembly build is not speed —
-it is that the semantics are the same ones the Rust crate implements, with the same diagnostics,
-traces, and diff, rather than a second implementation that will drift.
+The reason to use the WebAssembly build is not speed. It is that the semantics are the ones
+verified against `swcutil`, with the same diagnostics, traces, and diff — rather than a second
+implementation that will drift, which is exactly what the pure-JS tools in the comparison above
+turned out to be.
 
 Payload: 345 KB raw, 141 KB gzip, 113 KB brotli.
 

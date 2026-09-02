@@ -143,6 +143,40 @@ pub(crate) enum CompiledQuery {
     IgnoredDictionary(Vec<String>),
 }
 
+/// A compiled `/` pattern together with what its shape allows.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct CompiledPath {
+    pub(crate) pattern: Pattern,
+    /// The same pattern minus a trailing `/*`, compiled only when the pattern has one.
+    pub(crate) parent: Option<Pattern>,
+    /// Whether the path must also be tried without its leading slash. False for the usual
+    /// `/`-rooted pattern, which can never match a path that lacks one.
+    pub(crate) try_bare_path: bool,
+}
+
+impl CompiledPath {
+    /// Whether any form of this pattern matches any form of the path.
+    pub(crate) fn matches(&self, trimmed: &str, bare: Option<&str>, case_sensitive: bool) -> bool {
+        for pattern in std::iter::once(&self.pattern).chain(self.parent.as_ref()) {
+            if pattern.matches_with(trimmed, case_sensitive) {
+                return true;
+            }
+            if self.try_bare_path {
+                if let Some(bare) = bare {
+                    if pattern.matches_with(bare, case_sensitive) {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    pub(crate) fn source(&self) -> &str {
+        self.pattern.source()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct CompiledRule {
     pub(crate) detail_index: usize,
@@ -150,8 +184,7 @@ pub(crate) struct CompiledRule {
     pub(crate) legacy: bool,
     pub(crate) exclude: bool,
     pub(crate) effective: EffectiveDefaults,
-    /// One or two compiled forms of the `/` pattern; see [`crate::url::path_pattern_forms`].
-    pub(crate) path: Option<Vec<Pattern>>,
+    pub(crate) path: Option<CompiledPath>,
     pub(crate) query: Option<CompiledQuery>,
     pub(crate) fragment: Option<Pattern>,
     pub(crate) comment: Option<String>,
@@ -163,7 +196,7 @@ impl CompiledRule {
         let path_any = self
             .path
             .as_ref()
-            .map_or(true, |forms| forms.iter().any(Pattern::is_any));
+            .map_or(true, |path| path.pattern.is_any());
         let fragment_any = self.fragment.as_ref().map_or(true, Pattern::is_any);
         let query_any = match &self.query {
             None | Some(CompiledQuery::IgnoredDictionary(_)) => true,
@@ -186,11 +219,7 @@ impl CompiledRule {
                 EffectiveQuery::Items(keys.iter().map(|key| (key.clone(), None)).collect())
             }
         });
-        let path = self
-            .path
-            .as_ref()
-            .and_then(|forms| forms.first())
-            .map(|p| p.source().to_owned());
+        let path = self.path.as_ref().map(|path| path.source().to_owned());
         let fragment = self.fragment.as_ref().map(|p| p.source().to_owned());
         // A rule that constrains nothing behaves identically regardless of its flags, so normalise
         // them away rather than reporting a spurious difference.
@@ -585,18 +614,13 @@ fn compile_component(
     // A leading run of slashes in a path pattern is not significant; `swcutil` matches `//abc`
     // against `/abc`.
     let compiled_path = component.path.as_ref().map(|pattern| {
-        crate::url::path_pattern_forms(pattern)
-            .iter()
-            .map(|form| {
-                compile_pattern(
-                    form,
-                    effective.case_sensitive,
-                    table,
-                    &|| format!("{}./", path()),
-                    diagnostics,
-                )
-            })
-            .collect::<Vec<_>>()
+        compile_path(
+            pattern,
+            effective.case_sensitive,
+            table,
+            &|| format!("{}./", path()),
+            diagnostics,
+        )
     });
 
     let compiled_fragment = component.fragment.as_ref().map(|pattern| {
@@ -672,10 +696,13 @@ fn compile_legacy_path(
         Some(rest) => (true, rest.trim_start()),
         None => (false, source),
     };
-    let compiled: Vec<Pattern> = crate::url::path_pattern_forms(pattern_source)
-        .iter()
-        .map(|form| compile_pattern(form, base.case_sensitive, table, path, diagnostics))
-        .collect();
+    let compiled = compile_path(
+        pattern_source,
+        base.case_sensitive,
+        table,
+        path,
+        diagnostics,
+    );
     CompiledRule {
         detail_index,
         rule_index,
@@ -686,6 +713,29 @@ fn compile_legacy_path(
         query: None,
         fragment: None,
         comment: None,
+    }
+}
+
+/// Compiles a `/` pattern, adding the parent form only when the pattern actually ends in `/*`.
+fn compile_path(
+    source: &str,
+    case_sensitive: bool,
+    table: &SubstitutionTable,
+    path: PathFn<'_>,
+    diagnostics: &mut Vec<Diagnostic>,
+) -> CompiledPath {
+    let (canonical, shape) = crate::url::normalize_path_pattern(source);
+    let pattern = compile_pattern(&canonical, case_sensitive, table, path, diagnostics);
+    let parent = shape.matches_parent.then(|| {
+        let parent = canonical
+            .strip_suffix("/*")
+            .expect("matches_parent implies a trailing /*");
+        compile_pattern(parent, case_sensitive, table, path, diagnostics)
+    });
+    CompiledPath {
+        pattern,
+        parent,
+        try_bare_path: !shape.canonical_leading_slash,
     }
 }
 
