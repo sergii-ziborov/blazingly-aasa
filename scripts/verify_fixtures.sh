@@ -24,6 +24,7 @@ done < <(find tests/fixtures -name '*.json' | sort)
 
 if command -v python3 >/dev/null; then
   python3 scripts/check_corpus.py || status=1
+  python3 scripts/check_workflows.py >/dev/null || status=1
 fi
 
 if [ "$status" -eq 0 ]; then
