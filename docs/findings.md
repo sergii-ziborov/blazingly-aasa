@@ -3,9 +3,10 @@
 Features are easy to list and hard to judge. These are things this project actually caught —
 in real association files served by real companies, and in its own code.
 
-Every observation below was re-checked on **2026-09-03** and is reproducible with one command.
-Association files change; if a claim here no longer holds, that is the file being fixed, which is
-the point.
+Everything below is reproducible. The findings against this crate's own code are specific and
+dated; the ones about live association files are described as classes of problem rather than as
+named domains, because whose file is misconfigured on a given day is not this project's story to
+tell.
 
 ---
 
@@ -52,65 +53,58 @@ The conformance corpus failed before that shipped.
 
 ## In files served in production
 
-Run these yourself:
+These are the classes of problem the tool surfaces on real, live association files. No domain is
+named: which sites are misconfigured today is not this project's story to tell, and it changes.
+Point it at your own and see:
 
 ```bash
-npx blazingly-aasa-mcp fetch github.com
-npx blazingly-aasa-mcp fetch www.apple.com
-npx blazingly-aasa-mcp fetch airbnb.com
+npx blazingly-aasa-mcp fetch your-domain.example
 ```
 
 ### A redirect where Apple forbids one
 
 ```
-$ blazingly-aasa fetch airbnb.com
-error: https://airbnb.com/.well-known/apple-app-site-association: HTTP 301
+error: https://.../.well-known/apple-app-site-association: HTTP 301
 
 status:       301
-redirect:     https://www.airbnb.com/.well-known/apple-app-site-association
+redirect:     https://www..../.well-known/apple-app-site-association
   ! the server replied 301 and tried to redirect; Apple requires the association file to be
     served with no redirects
 ```
 
 Apple requires the file to be served over HTTPS with no redirects. A validator that follows
-redirects reports this domain as healthy — it found *a* file, just not at the address it asked for.
-This one refuses to follow, which is both faithful to the requirement and the reason the finding is
-visible at all.
+redirects reports such a domain as healthy — it found *a* file, just not at the address it asked
+for. This one refuses to follow, which is both faithful to the requirement and the reason the
+finding is visible at all. Apex-to-`www` redirects make this common.
 
-### Content-Type nobody serves correctly
+### `Content-Type` almost nobody serves correctly
 
-Apple documents `application/json`. Neither of these sends it:
-
-| Domain | `Content-Type` |
-| --- | --- |
-| `github.com` | `application/octet-stream` |
-| `www.apple.com` | `application/octet-stream` |
-
-Including Apple's own site. Reported as a note rather than an error for exactly that reason: a
-rule that the ecosystem universally ignores is worth surfacing and not worth failing a build over.
+Apple documents `application/json`. In practice `application/octet-stream` is widespread, including
+on files served by very large sites. Reported as a note rather than an error for exactly that
+reason: a rule the ecosystem universally ignores is worth surfacing and not worth failing a build
+over.
 
 ### A file served from the older path
 
-`github.com` serves from `/apple-app-site-association`, not `/.well-known/apple-app-site-association`.
-Both still work; only the second is documented. Worth knowing, not worth alarm.
+`/apple-app-site-association` still works; only `/.well-known/apple-app-site-association` is
+documented. Worth knowing, not worth alarm — and the tool falls back to the older location and says
+it did.
 
 ### A catch-all that is *not* a bug
 
-`github.com`'s file ends with:
+A file ending with
 
 ```json
 { "/": "*", "comment": "Matches all remaining routes" }
 ```
 
-This raises `AASA180` — the rule constrains nothing and matches every URL. It is also obviously
+raises `AASA180` — the rule constrains nothing and matches every URL. It is also obviously
 deliberate, and the author said so in the file.
 
-That is worth including here precisely because it is **not** a finding. Reporting it as one would
-be the kind of overclaiming this project is trying to avoid — and examining it produced a real
+That is worth including precisely because it is **not** a finding. Reporting it as one would be the
+kind of overclaiming this project is trying to avoid — and examining a real case of it produced an
 improvement instead: `AASA180` now quotes the author's own comment back, so a reader can dismiss it
 at a glance rather than investigating.
-
----
 
 ## In other implementations
 
