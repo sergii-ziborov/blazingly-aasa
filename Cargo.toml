@@ -3,7 +3,7 @@ members = ["bindings/wasm"]
 
 [package]
 name = "blazingly-aasa"
-version = "0.1.1"
+version = "0.1.2"
 edition = "2021"
 rust-version = "1.78"
 license = "MIT"
@@ -13,7 +13,7 @@ documentation = "https://docs.rs/blazingly-aasa"
 readme = "README.md"
 keywords = ["aasa", "universal-links", "deeplink", "ios", "associated-domains"]
 categories = ["parser-implementations", "web-programming", "wasm"]
-exclude = ["/tests/fixtures/real-world/**", "/benches/**", "/.github/**"]
+exclude = ["/tests/fixtures/real-world/**", "/benches/**", "/.github/**", "/docs/**"]
 
 [dependencies]
 blazingly-json = "0.1.5"

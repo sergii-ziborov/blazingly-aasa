@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2026-09-03
+
+Packaging and wording. No matching behaviour changed; the 140-case corpus is unmoved.
+
+- `docs/**` is no longer shipped inside the crate. The prose belongs with the repository, where it
+  can be corrected; a published tarball cannot be. 0.1.1 shipped a `docs/findings.md` that
+  described live association files by name, and a crates.io release is immutable — this is the
+  only way to stop distributing it.
+- `docs/competitors.md` keeps its numbers, its methodology, and its trivial-pass accounting, and
+  drops the evaluative phrasing around them. The comparison is still fully reproducible from the
+  commands in that file.
+
 ## npm 0.1.1 - 2026-09-03
 
 Packaging only; the Rust crate is unchanged.

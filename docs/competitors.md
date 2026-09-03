@@ -72,8 +72,8 @@ their type definitions and then ignore it when matching.
 translation escapes `$`, `(` and `)` before handling wildcards
 ([`sim/regex.js`](https://github.com/st-tech/universal-links-test/blob/main/src/sim/regex.ts)), so
 a rule of `/order/$(food)/*` compiles to a regex matching the literal text `/order/$(food)/`. A
-file using substitution variables does not fail loudly there — it silently matches nothing, which
-is the worst way for a link check to be wrong.
+file using substitution variables does not fail loudly there — it silently matches nothing, so the
+check reports success while the rule it was meant to test is inert.
 
 `$(region)` and `$(lang)` need Foundation's `isoRegionCodes` and `isoLanguageCodes`, 257 and 631
 entries. This crate generates them from Foundation itself (`scripts/generate_iso_tables.swift`)
@@ -114,13 +114,13 @@ defaults are all correct, and that is the part most implementations get wrong fi
 
 The substitution row needs reading carefully, and it is the reason this crate exists. Exactly 10 of
 those 20 cases expect `no_match` and exactly 10 expect `match`. It passes all ten of the first kind
-and none of the second — because a pattern it cannot interpret never matches anything. Its score
-there is not "half right"; it is **zero right, with half the cases passing by accident.** That is
-what makes the failure mode dangerous: a file using `$(lang)` does not blow up, it quietly stops
-matching, and a green check mark says nothing is wrong.
+and none of the second — because a pattern it cannot interpret never matches anything. So the
+10/20 does not describe partial support: the passing half is the half where "never match" is
+independently the right answer. The distinction matters because the failure is quiet — a file
+using `$(lang)` does not blow up, it stops matching, and a green check mark says nothing is wrong.
 
-The runner prints the trivial-pass count for exactly this reason. Any comparison that does not is
-overstating the loser.
+The runner prints the trivial-pass count for exactly this reason: a raw score cannot distinguish
+an implemented behaviour from a coincidentally correct one.
 
 The path-slashes and percent-encoding rows are mostly behaviours neither implementation knew about
 until `swcutil` settled them — this crate was wrong on four of them too, and
