@@ -1,5 +1,5 @@
 {
-  "name": "@sergii-ziborov/aasa",
+  "name": "blazingly-aasa",
   "version": "0.1.1",
   "description": "Apple Associated Domains (apple-app-site-association) semantics: parse, validate, match, explain, and diff \u2014 compiled to WebAssembly",
   "license": "MIT",

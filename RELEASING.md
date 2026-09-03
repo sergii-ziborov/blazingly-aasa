@@ -14,7 +14,7 @@ obstacle.
 ```
 blazingly-aasa (crates.io)  ->  blazingly-aasa-mcp (crates.io)
        |
-       +-> @sergii-ziborov/aasa (npm)
+       +-> blazingly-aasa (npm)
 ```
 
 ## Before releasing anything

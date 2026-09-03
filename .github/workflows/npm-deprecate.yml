@@ -8,6 +8,10 @@ name: Deprecate npm version
 on:
   workflow_dispatch:
     inputs:
+      package:
+        description: Package name, for example blazingly-aasa
+        required: true
+        default: blazingly-aasa
       version:
         description: The exact version to deprecate, for example 0.1.0
         required: true
@@ -29,10 +33,11 @@ jobs:
       - name: Deprecate
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PACKAGE: ${{ inputs.package }}
           VERSION: ${{ inputs.version }}
           MESSAGE: ${{ inputs.message }}
         run: |
           echo "acting as: $(npm whoami)"
-          npm deprecate "@sergii-ziborov/aasa@$VERSION" "$MESSAGE"
+          npm deprecate "$PACKAGE@$VERSION" "$MESSAGE"
           echo "--- current state ---"
-          npm view "@sergii-ziborov/aasa@$VERSION" deprecated
+          npm view "$PACKAGE@$VERSION" deprecated

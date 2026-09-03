@@ -7,7 +7,7 @@ and diff `apple-app-site-association` policy.
 [![WebAssembly](https://github.com/sergii-ziborov/blazingly-aasa/actions/workflows/wasm.yml/badge.svg)](https://github.com/sergii-ziborov/blazingly-aasa/actions/workflows/wasm.yml)
 [![crates.io](https://img.shields.io/crates/v/blazingly-aasa.svg)](https://crates.io/crates/blazingly-aasa)
 [![docs.rs](https://img.shields.io/docsrs/blazingly-aasa)](https://docs.rs/blazingly-aasa)
-[![npm](https://img.shields.io/npm/v/%40sergii-ziborov%2Faasa)](https://www.npmjs.com/package/%40sergii-ziborov%2Faasa)
+[![npm](https://img.shields.io/npm/v/blazingly-aasa)](https://www.npmjs.com/package/blazingly-aasa)
 ![MSRV 1.78](https://img.shields.io/badge/MSRV-1.78-blue)
 ![license MIT](https://img.shields.io/badge/license-MIT-blue)
 
@@ -153,11 +153,11 @@ if !diff.is_equivalent() {
 ## JavaScript
 
 ```bash
-npm install @sergii-ziborov/aasa
+npm install blazingly-aasa
 ```
 
 ```js
-import { Aasa } from "@sergii-ziborov/aasa";
+import { Aasa } from "blazingly-aasa";
 
 const response = await fetch("https://example.com/.well-known/apple-app-site-association");
 const aasa = Aasa.compile(new Uint8Array(await response.arrayBuffer()), "example.com");

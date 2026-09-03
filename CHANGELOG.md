@@ -11,7 +11,7 @@ Packaging only; the Rust crate is unchanged.
   `node` failed with `ERR_UNKNOWN_FILE_EXTENSION` on the `.wasm` import. Found by installing 0.1.0
   from the registry and running it, which is the only way this class of bug shows up.
 - The package now carries all three builds behind conditional exports: Node and Bun resolve the
-  `nodejs` build, bundlers the `bundler` build, and `@sergii-ziborov/aasa/web` the browser build.
+  `nodejs` build, bundlers the `bundler` build, and `blazingly-aasa/web` the browser build.
 - The Node build ships as `.cjs`, because wasm-pack's `nodejs` target emits CommonJS and the
   package is `"type": "module"`.
 
@@ -154,7 +154,7 @@ silently matches nothing passes for free. **No surveyed tool expands `$(...)` at
 
 ### WebAssembly
 
-- `@sergii-ziborov/aasa` with a persistent handle, so the compiled document stays inside WebAssembly and
+- `blazingly-aasa` with a persistent handle, so the compiled document stays inside WebAssembly and
   only small values cross the boundary.
 - Batch entry points, including `decideLines` for one string encode per batch.
 - Bundler, Node, and browser packages from one Rust module; tested on Node and Bun.

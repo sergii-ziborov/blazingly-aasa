@@ -16,7 +16,7 @@ It is about size, not speed:
 
 | | payload |
 | --- | --- |
-| `@sergii-ziborov/aasa` (WebAssembly) | 358 KB raw, **144 KB gzip** |
+| `blazingly-aasa` (WebAssembly) | 358 KB raw, **144 KB gzip** |
 | `@linkforty/aasa-core` | ~17 KB |
 | `universal-links-test` | a few KB |
 
