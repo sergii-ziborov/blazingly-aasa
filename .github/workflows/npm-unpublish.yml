@@ -1,0 +1,70 @@
+# Removes a published npm package or version from the registry.
+#
+# This is irreversible in a way deprecation is not: npm never lets the same name and version be
+# published again, and anything depending on it breaks immediately. npm only permits it within 72
+# hours of publishing.
+#
+# It exists for one situation -- a package published under the wrong name, caught before anyone
+# could reasonably depend on it. Prefer `Deprecate npm version` for everything else: a deprecated
+# version keeps working and says where to go instead.
+#
+# The `confirm` input must repeat the package name exactly. A workflow that deletes on one
+# mistyped field is not a workflow worth having.
+name: Unpublish npm package
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Package name, for example @scope/name
+        required: true
+      version:
+        description: Single version to remove. Leave empty to remove the whole package.
+        required: false
+      confirm:
+        description: Repeat the package name exactly to confirm
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  unpublish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Confirm the target
+        env:
+          PACKAGE: ${{ inputs.package }}
+          CONFIRM: ${{ inputs.confirm }}
+        run: |
+          if [ "$PACKAGE" != "$CONFIRM" ]; then
+            echo "confirmation '$CONFIRM' does not match package '$PACKAGE'" >&2
+            exit 1
+          fi
+
+      - name: Unpublish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          PACKAGE: ${{ inputs.package }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          echo "acting as: $(npm whoami)"
+          if [ -n "$VERSION" ]; then
+            echo "removing $PACKAGE@$VERSION"
+            npm unpublish "$PACKAGE@$VERSION"
+          else
+            echo "removing every version of $PACKAGE"
+            npm unpublish "$PACKAGE" --force
+          fi
+
+      - name: Report what remains
+        env:
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          npm view "$PACKAGE" versions 2>&1 || echo "  gone from the registry"
