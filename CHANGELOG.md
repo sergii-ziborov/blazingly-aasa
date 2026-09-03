@@ -15,7 +15,9 @@ Packaging only; the Rust crate is unchanged.
 - The Node build ships as `.cjs`, because wasm-pack's `nodejs` target emits CommonJS and the
   package is `"type": "module"`.
 
-## [Unreleased]
+## [0.1.1] - 2026-09-03
+
+Documentation and diagnostics. No matching behaviour changed; the 140-case corpus is unmoved.
 
 ### Added
 
@@ -201,4 +203,5 @@ silently matches nothing passes for free. **No surveyed tool expands `$(...)` at
 - The `$(region)` and `$(lang)` tables are a snapshot of one Foundation release; `ISO_TABLE_SOURCE`
   reports which.
 
+[0.1.1]: https://github.com/sergii-ziborov/blazingly-aasa/releases/tag/v0.1.1
 [0.1.0]: https://github.com/sergii-ziborov/blazingly-aasa/releases/tag/v0.1.0
