@@ -88,42 +88,43 @@ that can be scored:
 
 ```bash
 npm pack universal-links-test && tar xzf universal-links-test-*.tgz
-node conformance/run-third-party.mjs ./package/dist/sim/index.js
+node conformance/run.mjs --exec "node your-adapter.mjs ./package/dist/sim/index.js" --skip host
 ```
 
-Result on 2026-09-01, against v0.1.0 of that package (3 host cases skipped, since it takes a path
-relative to a fixed origin and does not claim to check hosts):
+Result on 2026-09-03 against v0.1.0 of that package, on the oracle-verified corpus. The three
+`host` cases are skipped: it takes a path relative to a fixed origin and does not claim to check
+hosts.
 
 | Feature | universal-links-test | blazingly-aasa |
 | --- | --- | --- |
 | rule order, `exclude` | 11/11 | 11/11 |
-| wildcards | 8/8 | 8/8 |
 | defaults hierarchy | 3/3 | 3/3 |
-| component defaults | 2/2 | 2/2 |
+| component defaults | 5/5 | 5/5 |
 | `appID` / `appIDs` | 3/3 | 3/3 |
-| query | 6/8 | 8/8 |
-| percent encoding | 3/6 | 6/6 |
+| wildcards | 7/8 | 8/8 |
+| query | 22/38 | 38/38 |
+| percent encoding | 8/15 | 15/15 |
+| path slashes | 13/25 | 25/25 |
+| legacy `paths` and `details` | 1/4 | 4/4 |
 | **substitution variables** | **10/20** | 20/20 |
-| legacy `paths` | 1/3 | 3/3 |
-| legacy `details` dictionary | 0/1 | 1/1 |
-| **total** | **52/70** | 70/70 |
+| **total** | **88/137** | 137/137 |
 
-It is genuinely solid on the core: rule ordering, `exclude`, wildcards, and the defaults hierarchy
-are all correct.
+It is genuinely solid on the core: rule ordering, `exclude`, the defaults hierarchy, and component
+defaults are all correct, and that is the part most implementations get wrong first.
 
 The substitution row needs reading carefully, and it is the reason this crate exists. Exactly 10 of
 those 20 cases expect `no_match` and exactly 10 expect `match`. It passes all ten of the first kind
 and none of the second — because a pattern it cannot interpret never matches anything. Its score
 there is not "half right"; it is **zero right, with half the cases passing by accident.** That is
-what makes the failure mode dangerous: a file using `$(lang)` does not blow up, it just quietly
-stops matching, and a green check mark says nothing is wrong.
+what makes the failure mode dangerous: a file using `$(lang)` does not blow up, it quietly stops
+matching, and a green check mark says nothing is wrong.
 
-The percent-encoding row splits the same way: the three cases that pass are the ones using the
-default, and the three that fail are exactly the three setting `percentEncoded: false` — the
-feature its source marks `// TODO`.
+The runner prints the trivial-pass count for exactly this reason. Any comparison that does not is
+overstating the loser.
 
-`conformance/run-third-party.mjs` prints the trivial-pass count for this reason. Any comparison
-that does not is overstating the loser.
+The path-slashes and percent-encoding rows are mostly behaviours neither implementation knew about
+until `swcutil` settled them — this crate was wrong on four of them too, and
+[findings.md](findings.md) says which.
 
 ## Where the others are ahead, deliberately
 

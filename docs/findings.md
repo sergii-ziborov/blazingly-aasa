@@ -114,8 +114,9 @@ at a glance rather than investigating.
 
 ## In other implementations
 
-`docs/competitors.md` scores the strongest surveyed tool against the corpus: **52 of 70** applicable
-cases. It is genuinely solid on rule ordering, `exclude`, wildcards, and the defaults hierarchy.
+`docs/competitors.md` scores the strongest surveyed tool against the corpus: **88 of 137**
+applicable cases. It is genuinely solid on the core — rule ordering, `exclude`, the defaults
+hierarchy — which is the part most implementations get wrong first.
 
 The row that matters is substitution variables: **10 of 20** — and all ten passes are cases
 expecting `no_match`, which any implementation that silently matches nothing passes for free. Its

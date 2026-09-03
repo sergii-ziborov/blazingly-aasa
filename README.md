@@ -196,12 +196,14 @@ the defaults hierarchy are all correct. So it can be scored against the same cor
 
 | Feature | universal-links-test | blazingly-aasa |
 | --- | --- | --- |
-| rule order, `exclude`, wildcards, defaults | 24/24 | 24/24 |
-| query | 6/8 | 8/8 |
-| percent encoding | 3/6 | 6/6 |
-| **substitution variables** | **10/20** | 20/20 |
+| rule order, `exclude`, defaults, `appIDs` | 22/22 | 22/22 |
+| wildcards | 7/8 | 8/8 |
+| query | 22/38 | 38/38 |
+| percent encoding | 8/15 | 15/15 |
+| path slashes | 13/25 | 25/25 |
 | legacy `paths`, legacy `details` | 1/4 | 4/4 |
-| **total** | **52/70** | 70/70 |
+| **substitution variables** | **10/20** | 20/20 |
+| **total** | **88/137** | 137/137 |
 
 That substitution row is the reason this crate exists, and it needs reading carefully. Exactly ten
 of those twenty cases expect `no_match`; it passes all ten of those and none of the other ten —

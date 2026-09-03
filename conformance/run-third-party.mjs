@@ -1,4 +1,13 @@
-// Runs the conformance corpus against a third-party AASA implementation.
+// Runs the conformance corpus against a third-party AASA implementation exposing
+// `verify(json, url)`.
+//
+// For anything else -- another language, a command line, a different signature -- use the general
+// runner instead, which speaks a line protocol and does not care what is on the other end:
+//
+//   node conformance/run.mjs --exec "<command>"
+//
+// See PROTOCOL.md. This file remains because that one shape is common enough to be worth a
+// ready-made adapter.
 //
 //   npm pack universal-links-test && tar xzf universal-links-test-*.tgz
 //   node conformance/run-third-party.mjs ./package/dist/sim/index.js
