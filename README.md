@@ -46,11 +46,11 @@ closest failure:
          pattern did not match
 ```
 
-And it is the only implementation whose answers have been checked against Apple's own tooling.
-**139 of its 140 conformance cases are verified against `swcutil`**, with the raw runs committed in
-[`conformance/oracle`](conformance/oracle). That check found four places where this crate was
-wrong, including one it had been confident enough about to ship as a lint —
-[docs/parity.md](docs/parity.md) has each of them.
+An independent, cross-platform AASA matcher **differential-tested against Apple's own `swcutil`:
+139 of 140 conformance cases oracle-verified**, with the raw runs committed in
+[`conformance/oracle`](conformance/oracle) so the conclusions can be audited without a Mac. That
+check found four places where this crate was wrong, including one it had been confident enough
+about to ship as a lint — [docs/parity.md](docs/parity.md) has each of them.
 
 ## What it does
 
@@ -62,8 +62,9 @@ wrong, including one it had been confident enough about to ship as a lint —
   query predicate that silently voids every constraint beside it, mixed legacy and modern formats.
 - **Matches** a URL for an app, with full trace: which detail entry, which rule index, what the
   effective `caseSensitive` and `percentEncoded` were, and exactly which component failed.
-- **Compares** two files semantically — behaviour, not bytes. Hoisting `caseSensitive` into
-  `defaults` reports no change; reordering two rules reports a move.
+- **Compares** two files by effective policy, not bytes. Hoisting `caseSensitive` into `defaults`
+  reports no change. The comparison is conservative: equivalent means identical decisions for
+  every URL, while a reported difference means *potentially* different.
 - **Answers in both directions**: does *this app* get *this URL*, and which apps does a URL reach.
 - **Reads CMS-signed files** from the iOS 9 era, which every JavaScript tool rejects as invalid
   JSON — extracting the payload, and saying plainly that the signature was not verified.
@@ -136,7 +137,8 @@ for diagnostic in report.errors() {
 }
 ```
 
-Comparing what you serve against what Apple's CDN serves:
+Comparing what you serve against what Apple's CDN serves — by effective policy, so reformatting is
+silent and a stale copy is not:
 
 ```rust
 let diff = origin.semantic_diff(&cdn);

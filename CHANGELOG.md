@@ -15,6 +15,22 @@ Packaging only; the Rust crate is unchanged.
 - The Node build ships as `.cjs`, because wasm-pack's `nodejs` target emits CommonJS and the
   package is `"type": "module"`.
 
+## [Unreleased]
+
+### Changed
+
+- `semantic_diff`, `semantic_equal`, and `AasaDiff::is_equivalent` documented what they actually
+  compute. They compare **normalised effective policy**, which is sound — equivalent means
+  identical decisions for every URL — but not complete: reordering two rules whose patterns can
+  never both match is reported as a difference, and so is changing a substitution variable no
+  pattern uses. The previous wording ("the same decisions for every app", "only differences that
+  change behaviour") promised more than the algorithm proves. No behaviour changed; the contract is
+  now honest, and `tests/diffing.rs` pins both directions.
+- The README no longer claims to be "the only implementation" checked against Apple's tooling. It
+  is an independent matcher differential-tested against `swcutil` — a claim that is both stronger
+  and defensible, since `universal-links-test` also invokes the real `swcutil` on macOS for its
+  non-simulated path.
+
 ## [0.1.0] - 2026-09-02
 
 First release. A semantic engine for Apple Associated Domains, usable from Rust and WebAssembly,

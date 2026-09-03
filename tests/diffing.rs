@@ -231,3 +231,72 @@ fn normalized_json_resolves_defaults_and_keeps_rule_order() {
     let second = normalized.find("/a/*").expect("second rule present");
     assert!(first < second, "rule order must survive normalization");
 }
+
+/// The comparison is sound but not complete, and the documentation now says so. This pins the
+/// direction: it must never call two differing documents equivalent, and it is allowed to report a
+/// difference that no URL witnesses.
+#[test]
+fn the_comparison_is_conservative_not_behavioural() {
+    // Two rules whose patterns can never both match. Reordering them changes no decision.
+    let one = compile(
+        r#"{"applinks":{"details":[{"appIDs":["A.b"],
+        "components":[{"/":"/foo/*"},{"/":"/bar/*"}]}]}}"#,
+    );
+    let other = compile(
+        r#"{"applinks":{"details":[{"appIDs":["A.b"],
+        "components":[{"/":"/bar/*"},{"/":"/foo/*"}]}]}}"#,
+    );
+
+    for url in [
+        "https://example.com/foo/x",
+        "https://example.com/bar/x",
+        "https://example.com/baz/x",
+    ] {
+        assert_eq!(
+            one.decide("example.com", "A.b", url).unwrap(),
+            other.decide("example.com", "A.b", url).unwrap(),
+            "{url} decides the same in both"
+        );
+    }
+
+    // ...and the comparison still reports it. That is the documented, conservative direction.
+    assert!(
+        !one.semantic_equal(&other),
+        "a reorder is reported even when no URL witnesses it; if this ever becomes true, the \
+         module documentation about completeness needs revisiting"
+    );
+
+    // A substitution variable no pattern uses is reported for the same reason.
+    let unused = compile(
+        r#"{"applinks":{"substitutionVariables":{"unused":["x"]},
+        "details":[{"appIDs":["A.b"],"components":[{"/":"/foo/*"},{"/":"/bar/*"}]}]}}"#,
+    );
+    assert!(!one.semantic_equal(&unused));
+}
+
+/// The direction that must never break: equivalent has to mean identical decisions.
+#[test]
+fn equivalent_documents_never_decide_differently() {
+    let inline = compile(
+        r#"{"applinks":{"details":[{"appIDs":["A.b"],"components":[
+        {"/":"/a/*","caseSensitive":false},{"/":"/b/*","caseSensitive":false}]}]}}"#,
+    );
+    let hoisted = compile(
+        r#"{"applinks":{"details":[{"appIDs":["A.b"],
+        "defaults":{"caseSensitive":false},"components":[{"/":"/a/*"},{"/":"/b/*"}]}]}}"#,
+    );
+    assert!(inline.semantic_equal(&hoisted));
+
+    for url in [
+        "https://example.com/a/x",
+        "https://example.com/A/x",
+        "https://example.com/b/x",
+        "https://example.com/c/x",
+    ] {
+        assert_eq!(
+            inline.decide("example.com", "A.b", url).unwrap(),
+            hoisted.decide("example.com", "A.b", url).unwrap(),
+            "{url}"
+        );
+    }
+}

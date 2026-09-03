@@ -148,6 +148,45 @@ its fetch logic did not leak downward.
 
 ---
 
+---
+
+## 3. Behavioural diff with a witness URL
+
+`semantic_diff` compares normalised effective policy. It is sound — equivalent means identical
+decisions — but not complete: reordering two rules that can never both match is reported, because
+proving they never overlap is a different algorithm than comparing lists.
+
+The stronger question is worth answering, and the pieces are already here: compiled patterns, the
+wildcard language, substitutions, the bitset NFA, rule order, and an evaluator.
+
+> Is there a URL that these two documents decide differently, and what is it?
+
+A three-valued answer is far more useful than a fourth kind of diff entry:
+
+```
+ProvenEquivalent
+ProvenDifferent { witness: "https://example.com/help/website/test", left: Exclude, right: Match }
+Unknown          { potential: [...] }
+```
+
+Because this is what a person actually needs to see:
+
+```
+ORIGIN != APPLE CDN
+
+This difference changes behaviour.
+  witness:    https://example.com/help/website/test
+  origin:     EXCLUDE
+  apple cdn:  MATCH
+```
+
+`RULE_MOVED` makes a reader work out whether it matters. A witness URL does not. It would also
+retire the completeness caveat above for the cases it can decide, and say `Unknown` honestly for
+the rest.
+
+Not started. It is the most interesting thing left in the core, and unlike another validation rule
+it is something no other implementation offers.
+
 ## Things deliberately not on the roadmap
 
 `no_std`, streaming parse, C bindings, and a CLI were all in the original plan as "0.3+, only if

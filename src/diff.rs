@@ -3,10 +3,27 @@
 //! A textual diff of two `apple-app-site-association` files is mostly noise: key order changes,
 //! `caseSensitive` moves from a component up to `defaults`, whitespace shifts. What matters is
 //! whether the *decisions* changed. This module compares the effective, order-preserving rule list
-//! per app, so a pure refactor reports no changes while a reordering does.
+//! per app, so a pure refactor reports no changes.
 //!
-//! Equivalence is only ever claimed when normalisation can prove it. Anything this crate cannot
-//! reduce to a comparable form is reported as a change.
+//! # What "equivalent" means here, exactly
+//!
+//! This compares **normalised effective policy**, not behaviour. The distinction matters:
+//!
+//! * **Sound.** Two documents reported as equivalent decide every URL identically. A difference
+//!   that changes a decision is never missed.
+//! * **Not complete.** A reported difference does not prove a URL exists that the two documents
+//!   answer differently. Reordering two rules whose patterns cannot both match — `/foo/*` and
+//!   `/bar/*` — is reported as a move, because rule order decides which of two *overlapping* rules
+//!   wins and this comparison does not attempt to prove they never overlap. Changing a
+//!   substitution variable no pattern uses is reported too.
+//!
+//! In other words: no false "equivalent", but "different" means *potentially* different. That is
+//! the safe direction for a check that gates a deploy, and it is worth stating rather than
+//! implying more.
+//!
+//! Proving the stronger property — producing a witness URL that the two documents decide
+//! differently, or proving none exists — is a real feature and a different algorithm. See
+//! `docs/roadmap.md`.
 
 use crate::compile::{CompiledAasa, EffectiveRule, Service, SERVICES};
 use serde::Serialize;
@@ -166,7 +183,12 @@ pub struct AasaDiff {
 }
 
 impl AasaDiff {
-    /// Whether the two documents make the same decisions for every app.
+    /// Whether the two documents have identical normalised effective policy.
+    ///
+    /// **True means they decide every URL identically.** False means they *might* differ: this
+    /// compares policy, not behaviour, so a reordering of two rules that can never both match is
+    /// reported as a difference even though no URL can tell them apart. See the module
+    /// documentation.
     #[must_use]
     pub fn is_equivalent(&self) -> bool {
         self.changes.is_empty()
@@ -195,7 +217,11 @@ impl fmt::Display for AasaDiff {
 }
 
 impl CompiledAasa {
-    /// Compares this document with `other`, reporting only differences that change behaviour.
+    /// Compares this document with `other` by normalised effective policy.
+    ///
+    /// Sound but not complete: anything reported as equivalent decides every URL the same way,
+    /// while a reported difference may have no URL that witnesses it. See the module
+    /// documentation for what that rules in and out.
     #[must_use]
     pub fn semantic_diff(&self, other: &Self) -> AasaDiff {
         let mut changes = Vec::new();
@@ -243,7 +269,10 @@ impl CompiledAasa {
         AasaDiff { changes }
     }
 
-    /// Whether the two documents make the same decisions for every app.
+    /// Whether the two documents have identical normalised effective policy.
+    ///
+    /// True guarantees identical decisions for every URL. False does not guarantee a difference in
+    /// decisions; see [`AasaDiff::is_equivalent`].
     #[must_use]
     pub fn semantic_equal(&self, other: &Self) -> bool {
         self.semantic_diff(other).is_equivalent()

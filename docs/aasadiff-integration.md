@@ -42,9 +42,9 @@ if !diff.is_equivalent() {
 # Ok::<(), blazingly_aasa::ParseError>(())
 ```
 
-The point of a *semantic* diff here is that a CDN copy is often reformatted, reordered by key, or
-re-serialised. A textual diff of those two files is mostly noise. This one reports a change only
-when a decision changed:
+The point of comparing effective policy is that a CDN copy is often reformatted, reordered by key,
+or re-serialised. A textual diff of those two files is mostly noise. This one is quiet through a
+refactor and loud through a real change:
 
 ```
 RULE_CHANGED    ABCDE12345.com.example.app #2
@@ -55,6 +55,12 @@ RULE_CHANGED    ABCDE12345.com.example.app #2
 Rule *order* is compared too, because order decides which rule wins. Hoisting `caseSensitive` out
 of ten components into a `defaults` object is reported as no change; swapping two rules is reported
 as a move.
+
+One property to build on rather than around: the comparison is **sound but not complete**.
+Equivalent means the two documents decide every URL identically. A reported difference means they
+*might* differ — reordering two rules that can never both match is reported, because proving they
+never overlap is a different algorithm. A tool that gates a deploy on this is failing safe; a tool
+that reports "behaviour changed" to a human should say "policy changed" instead.
 
 ## Cross-checking against a binary
 
