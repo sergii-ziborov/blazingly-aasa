@@ -17,7 +17,24 @@ Packaging only; the Rust crate is unchanged.
 
 ## [Unreleased]
 
+### Added
+
+- **The conformance corpus is now usable by any implementation, in any language.**
+  `conformance/PROTOCOL.md` defines a line-oriented contract — read one JSON case per line, write
+  one decision per line — and `conformance/run.mjs --exec "<command>"` scores anything that speaks
+  it. Two reference adapters ship with it, one binding a library in JavaScript and one shelling out
+  to a command line from Python; both score 140/140, and CI runs the protocol so the contract
+  cannot drift. The corpus was already implementation-neutral data; it was only reachable through a
+  JavaScript module of one particular shape.
+- `docs/findings.md`: what this project actually caught, in production files and in its own code,
+  with every observation dated and reproducible.
+
 ### Changed
+
+- `AASA180` now quotes the rule's own `comment` when it has one. A catch-all is frequently
+  deliberate — GitHub's file ends with `{"/": "*", "comment": "Matches all remaining routes"}` —
+  and quoting the author back turns a warning the reader has to investigate into one they can
+  dismiss at a glance.
 
 - `semantic_diff`, `semantic_equal`, and `AasaDiff::is_equivalent` documented what they actually
   compute. They compare **normalised effective policy**, which is sound — equivalent means

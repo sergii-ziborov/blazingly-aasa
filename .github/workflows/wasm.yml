@@ -45,6 +45,14 @@ jobs:
       - name: Conformance corpus (Bun)
         run: bun bindings/wasm/tests/conformance.mjs
 
+      # The published protocol, exercised the way an outside implementation would use it. Two
+      # adapters in two languages, so a change that breaks the contract fails here rather than
+      # for whoever tries to score their own matcher.
+      - name: Conformance protocol (library binding)
+        run: node conformance/run.mjs --exec "node conformance/adapters/wasm.mjs"
+
+
+
       - name: Report payload size
         run: |
           wasm=$(find bindings/wasm/pkg -name '*.wasm')

@@ -8,6 +8,7 @@ and diff `apple-app-site-association` policy.
 [![crates.io](https://img.shields.io/crates/v/blazingly-aasa.svg)](https://crates.io/crates/blazingly-aasa)
 [![docs.rs](https://img.shields.io/docsrs/blazingly-aasa)](https://docs.rs/blazingly-aasa)
 [![npm](https://img.shields.io/npm/v/blazingly-aasa)](https://www.npmjs.com/package/blazingly-aasa)
+[![AASA conformance 139/140 oracle](https://img.shields.io/badge/AASA%20conformance-139%2F140%20oracle-brightgreen)](conformance/)
 ![MSRV 1.78](https://img.shields.io/badge/MSRV-1.78-blue)
 ![license MIT](https://img.shields.io/badge/license-MIT-blue)
 
@@ -211,24 +212,47 @@ the cases passing by accident.
 That is the dangerous failure mode: a file using `$(lang)` does not error, it silently matches
 nothing, and the check stays green.
 
-## The conformance corpus
+## The AASA conformance corpus
 
-`conformance/cases.json` is 140 matching and 13 validation cases, each tagged with the feature it
-covers, a link to the Apple page that documents it, and whether the behaviour is **oracle**-checked
-against `swcutil`, merely **documented** by Apple, or **decided** by this crate. 139 of the 140 are
-oracle-checked; the one exception is this crate's own convention that an empty domain skips the host
-check, which `swcutil` has no way to express.
+[`conformance/`](conformance/) is a test suite for the *format*, not for this crate.
 
-The Rust suite and the WebAssembly suite both run it, so a binding bug cannot hide behind passing
-Rust tests. It is published rather than kept internal, because a shared corpus is how the whole
-ecosystem gets more correct rather than just this crate:
+140 matching cases and 13 validation cases, each tagged with the feature it covers, a link to the
+Apple page that documents it, and how the expectation was established:
+
+| | |
+| --- | --- |
+| **oracle** | checked against Apple's `swcutil`, with the raw run committed — **139 of 140** |
+| **documented** | Apple states it and a test asserts it |
+| **decided** | Apple does not state it and the oracle cannot answer it — **1 case**, this crate's own convention that an empty domain skips the host check |
+
+It is deliberately implementation-neutral, and scoring your own matcher takes one command:
 
 ```bash
-node conformance/run-third-party.mjs ./path/to/some-other-implementation.js
+node conformance/run.mjs --exec "./your-matcher"
 ```
 
-The runner reports how many passes are *trivial* — an implementation that silently matches nothing
-passes every `expect: no_match` case, and a comparison that hides this overstates the loser.
+Your program reads one JSON case per line and writes one decision per line — nine lines of work in
+any language. [`conformance/PROTOCOL.md`](conformance/PROTOCOL.md) is the contract;
+[`conformance/adapters/`](conformance/adapters/) holds two reference implementations, one binding a
+library in JavaScript and one shelling out to a command line from Python, both scoring 140/140 and
+both run in CI so the contract cannot rot.
+
+The report separates real passes from accidental ones:
+
+```
+feature              score   of which trivial
+ok   rule-order      11/11   4 expect no_match
+FAIL substitutions   10/20   10 expect no_match
+```
+
+Ten of the twenty substitution cases expect `no_match`, so an implementation that silently matches
+nothing passes all ten by accident. `10/20` there is **zero right**, not half — and a comparison
+that hides this flatters the loser. That column is why the tables in
+[docs/competitors.md](docs/competitors.md) can be read at face value.
+
+If a case is wrong, that is a bug worth an issue. It is checked against Apple's tool, not against
+this crate's opinion, and [`conformance/oracle/`](conformance/oracle/) has the raw runs so the
+conclusions can be audited without a Mac.
 
 ## Performance
 
@@ -424,6 +448,7 @@ dependencies and compiles to WebAssembly. See
 
 | | |
 | --- | --- |
+| [docs/findings.md](docs/findings.md) | what it actually caught — in production files, and in its own code |
 | [docs/competitors.md](docs/competitors.md) | what the existing tools cover, measured against the corpus |
 | [docs/roadmap.md](docs/roadmap.md) | why there is no hand-written JS port, and no MCP server yet |
 | [docs/semantics.md](docs/semantics.md) | what is implemented and where each rule comes from |

@@ -191,18 +191,30 @@ fn check_rules(compiled: &CompiledAasa, diagnostics: &mut Vec<Diagnostic>) {
 
             if rule.is_unconstrained() {
                 if !rule.legacy {
+                    // A catch-all is often deliberate -- GitHub's file ends with one commented
+                    // "Matches all remaining routes". Quoting the author's own comment turns this
+                    // from a warning the reader has to investigate into one they can dismiss at a
+                    // glance.
+                    let message = match &rule.comment {
+                        Some(comment) => format!(
+                            "this rule constrains no URL component, so it matches every URL \
+                             (comment: {comment})"
+                        ),
+                        None => "this rule constrains no URL component, so it matches every URL"
+                            .to_owned(),
+                    };
+                    let help = if rule.exclude {
+                        "it blocks the whole domain for this app"
+                    } else if rule.comment.is_some() {
+                        "it opens the whole domain for this app; the comment suggests that is \
+                         intended"
+                    } else {
+                        "it opens the whole domain for this app; add `/`, `?`, or `#` if that was \
+                         not intended"
+                    };
                     diagnostics.push(
-                        Diagnostic::new(
-                            DiagnosticCode::EmptyComponentRule,
-                            &path,
-                            "this rule constrains no URL component, so it matches every URL",
-                        )
-                        .with_help(if rule.exclude {
-                            "it blocks the whole domain for this app"
-                        } else {
-                            "it opens the whole domain for this app; add `/`, `?`, or `#` if that \
-                             was not intended"
-                        }),
+                        Diagnostic::new(DiagnosticCode::EmptyComponentRule, &path, message)
+                            .with_help(help),
                     );
                 }
                 if catch_all.is_none() {
