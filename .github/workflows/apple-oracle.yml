@@ -21,12 +21,28 @@ jobs:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      # The committed file is rustfmt'd and the generator's output is not, so comparing them raw
+      # reports drift every month whether or not Foundation changed. A warning that is always on
+      # is a warning nobody reads.
       - name: Regenerate the ISO tables and check for drift
         run: |
-          swift scripts/generate_iso_tables.swift > /tmp/iso_tables.rs
+          swift scripts/generate_iso_tables.swift > /tmp/iso_tables_raw.rs
+          cp /tmp/iso_tables_raw.rs /tmp/iso_tables.rs
+          rustfmt --edition 2021 /tmp/iso_tables.rs || true
           if ! diff -q src/iso_tables.rs /tmp/iso_tables.rs; then
             echo "::warning::Foundation's isoRegionCodes/isoLanguageCodes have changed on this runner."
             diff src/iso_tables.rs /tmp/iso_tables.rs | head -40 || true
+          else
+            echo "ISO tables match Foundation on $(sw_vers -productVersion)."
           fi
       - name: Differential run against swcutil
         run: sudo ./scripts/oracle_swcutil.sh || true
+      # The two readings this crate had to choose without Apple stating them.
+      - name: Probe the remaining semantic gaps
+        run: sudo ./scripts/oracle_probe_gaps.sh || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: oracle-output
+          path: conformance/oracle/swcutil-gap-probes.tsv
+          if-no-files-found: ignore
