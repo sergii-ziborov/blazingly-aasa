@@ -197,3 +197,19 @@ consumers require them". No consumer requires them. They stay off the list until
 
 The next thing that would genuinely improve this crate is not a feature. It is running
 `scripts/oracle_swcutil.sh` and moving rows in `docs/parity.md` from **decided** to **oracle**.
+
+## Open: `defaults` as a real components subclass
+
+The oracle run of 2026-09-04 showed Apple applies pattern keys inside `defaults` and this crate
+does not — `defaults: {"/": "/foo/*"}` narrows every rule under it, and `defaults: {"exclude":
+true}` blocks, where this crate answers MATCH. Evidence and the exact cases are in
+`docs/parity.md` and `conformance/oracle/swcutil-gap-probes.tsv`.
+
+Closing it means `MatchDefaults` carrying a full component shape — `/`, `?`, `#`, `exclude` — and
+merging into each rule at both the applinks and detail level, with the component's own value
+winning where it has one. That is a matching change: it needs corpus cases at both levels, a
+decision about how a defaults `?` dictionary combines with a rule's own, and a re-run of the
+oracle to confirm the merge rule rather than only the presence of one. `AASA192` warns about the
+divergence in the meantime, so no document hits it silently.
+
+It is the last known place where this crate is more permissive than Apple.
