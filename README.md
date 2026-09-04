@@ -89,69 +89,152 @@ blazingly-aasa = "0.1"
 ```rust
 use blazingly_aasa::{CompiledAasa, MatchDecision};
 
-let bytes = br#"{
-  "applinks": {
-    "details": [{
-      "appIDs": ["ABCDE12345.com.example.app"],
-      "components": [
-        { "/": "/help/website/*", "exclude": true },
-        { "/": "/help/*", "?": { "articleNumber": "????" } }
-      ]
-    }]
-  }
-}"#;
-
-let aasa = CompiledAasa::parse(bytes)?;
+let aasa = CompiledAasa::parse(document)?;
 let app = "ABCDE12345.com.example.app";
 
-// The document blocks this one, and says so rather than just declining.
-let blocked = aasa.match_url("example.com", app, "https://example.com/help/website/faq")?;
-assert_eq!(blocked.decision, MatchDecision::Exclude);
+// The fast path: a decision, nothing else.
+let decision = aasa.decide("example.com", app, "https://example.com/help/1?articleNumber=4815")?;
+assert_eq!(decision, MatchDecision::Match);
 
-// Four characters, as the pattern demands.
-let hit = aasa.match_url("example.com", app, "https://example.com/help/1?articleNumber=4815")?;
-assert_eq!(hit.decision, MatchDecision::Match);
-
-// Three characters. Not an error — an answer.
+// Costs more, answers "why".
 let miss = aasa.match_url("example.com", app, "https://example.com/help/1?articleNumber=481")?;
-assert_eq!(miss.decision, MatchDecision::NoMatch);
-println!("{miss}"); // the trace above
+println!("{miss}");
 ```
 
-The other direction — which apps does a URL reach?
+Against a document whose first rule excludes `/help/website/*` and whose second requires a
+four-character `articleNumber`, that prints — this is the real output of
+[`examples/matching.rs`](examples/matching.rs), not a paraphrase:
 
-```rust
-for (app_id, decision) in aasa.apps_for_url("example.com", "https://example.com/help/1?articleNumber=4815")? {
-    println!("{app_id}: {decision}");
-}
-// ABCDE12345.com.example.app: MATCH
+```text
+MATCH    https://example.com/help/1?articleNumber=4815
+NO_MATCH https://example.com/help/1?articleNumber=481
+BLOCK    https://example.com/help/website/faq
+NO_MATCH https://example.com/store
+
+NO_MATCH
+
+application: ABCDE12345.com.example.app
+domain:      example.com
+url:         https://example.com/help/1?articleNumber=481
+
+reason:
+  the entries that apply to ABCDE12345.com.example.app have no rule matching this URL
+
+closest failure:
+  detail #0, rule #1
+  [ok  ] path
+         url:     /help/1
+         pattern: /help/*
+         wildcard match
+  [FAIL] query[articleNumber]
+         url:     481
+         pattern: ????
+         pattern did not match
+
+
+ABCDE12345.com.example.app: MATCH
 ```
 
-Linting, with codes you can build CI on:
+A near miss is an answer, not an error: the trace names the rule that came closest and the one
+component that failed, with the pattern and the input side by side.
 
-```rust
-let report = blazingly_aasa::validate(bytes)?;
-for diagnostic in report.errors() {
-    eprintln!("{diagnostic}");
-    // error [AASA110] applinks.details[1]: this entry names no application identifier
-    //   help: add `appID` or `appIDs`
-}
+Linting, with stable codes you can gate CI on ([`examples/validate.rs`](examples/validate.rs)):
+
+```text
+error [AASA150] applinks.details[0].components[0].?.flag: query predicate is a boolean, but Apple documents only string patterns here
+  help: Apple ignores the entire query dictionary when any predicate is not a string, so every query constraint in this rule stops applying and the rule matches more URLs, not fewer. Replace every predicate with a string pattern.
+error [AASA110] applinks.details[1]: this entry names no application identifier
+  help: add `appID` or `appIDs`
+warning [AASA180] applinks.details[0].components[0]: this rule constrains no URL component, so it matches every URL
+  help: it opens the whole domain for this app; add `/`, `?`, or `#` if that was not intended
+warning [AASA190] applinks.details[0].components[1]: rule #0 already matches every URL, so this rule never runs
+  help: the first matching rule wins; move this rule above the catch-all
+warning [AASA180] applinks.details[0].components[2]: this rule constrains no URL component, so it matches every URL (comment: everything else)
+  help: it opens the whole domain for this app; the comment suggests that is intended
+
+errors: 2  warnings: 3
+has_errors: true
+AASA150 present: a query dictionary in this file is inert
 ```
 
-Comparing what you serve against what Apple's CDN serves — by effective policy, so reformatting is
-silent and a stale copy is not:
+Note the chain: the non-string `flag` predicate makes Apple discard the whole `?` dictionary, which
+leaves rule #0 constraining nothing — so the catch-all warning fires on a rule the author thought
+was narrow, and the rule after it becomes unreachable. One mistake, three diagnostics.
 
-```rust
-let diff = origin.semantic_diff(&cdn);
-if !diff.is_equivalent() {
-    for change in diff.changes() {
-        println!("{change}");
-        // RULE_CHANGED    ABCDE12345.com.example.app #2
-        //   before: / = /help/*, caseSensitive=false, percentEncoded=true
-        //   after:  / = /help/*, caseSensitive=true, percentEncoded=true
-    }
-}
+Comparing what you serve against what Apple's CDN serves, by effective policy rather than bytes
+([`examples/diff.rs`](examples/diff.rs)):
+
+```text
+origin vs reformatted
+  equivalent:          true
+  structurally_equal:  false
+
+origin vs stale CDN copy
+  equivalent: false
+  RULE_CHANGED    ABCDE12345.com.example.app #0
+  before: / = /help/*, caseSensitive=false, percentEncoded=true
+  after:  / = /help/*, caseSensitive=true, percentEncoded=true
+
+https://example.com/HELP/1
+  origin: MATCH
+  stale:  NO_MATCH
 ```
+
+### Every method
+
+**Parsing.** `CompiledAasa::parse(bytes)` and `parse_with(bytes, &ParseOptions)`, which sets the
+size limit and whether unknown keys are reported. Both accept a signed (CMS/PKCS#7) file and
+extract the payload. `document()` returns the parsed `AasaDocument` behind it.
+
+**Deciding.**
+
+| Method | Answers |
+| --- | --- |
+| `decide(domain, app_id, url)` | `Match` / `Exclude` / `NoMatch`, allocation-free |
+| `decide_parts(domain, app_id, &UrlParts)` | the same, when the URL is already split |
+| `match_url(domain, app_id, url)` | the decision plus the full trace |
+| `match_parts(domain, app_id, &UrlParts)` | the same, from split parts |
+| `apps_for_url(domain, url)` | every app the URL reaches, with each decision |
+| `apps_for_url_parts(domain, &UrlParts)` | the same, from split parts |
+
+**Asking about the document.**
+
+| Method | Answers |
+| --- | --- |
+| `has_applinks()` | whether an `applinks` section exists at all |
+| `applink_apps()` | every app identifier under `applinks` |
+| `has_applink_app(app_id)` | whether one app is listed |
+| `has_webcredential_app(app_id)` | shared web credentials |
+| `has_appclip(app_id)` | App Clips |
+| `has_activitycontinuation_app(app_id)` | Handoff |
+| `services_for_app(app_id)` | every service one app is enrolled in |
+| `services_for_bundle(team_id, bundle_id)` | the same, addressed by team and bundle |
+| `app_ids_for_bundle(bundle_id)` | every team that ships this bundle id |
+| `apps_for_service(Service)` | the inverse: who is enrolled in one service |
+| `effective_rules_for(app_id)` | the rules after the defaults hierarchy is applied |
+| `substitution_variables()` | the `$(...)` tables the document defines |
+
+**Comparing.** `semantic_diff(&other)` returns an `AasaDiff` with `is_equivalent()` and
+`changes()`; `semantic_equal(&other)` is the boolean; `structural_equal(&other)` compares the
+normalised documents instead; `to_normalized_json()` is that normal form.
+
+`equivalent == true` guarantees the same decision for every URL. `false` means they *may* differ —
+it does not prove they do, and no witness URL is produced. The `docs/roadmap.md` entry on
+behavioural diffing is about closing that gap.
+
+**Validating.** `validate()` returns a `ValidationReport`: `diagnostics()`, `errors()`,
+`warnings()`, `infos()`, `has_errors()`, `is_empty()`, and `contains(DiagnosticCode)` for gating
+CI on one specific finding. Every code is listed in [docs/diagnostics.md](docs/diagnostics.md);
+`DiagnosticCode::all()` enumerates them at runtime.
+
+**Free functions.** `validate(bytes)`, `match_url(bytes, domain, app_id, url)`, and
+`diff(left, right)` do the whole job in one call when you will not reuse the document.
+`split_app_id`, `trim_path`, `strip_leading_slash`, and `percent_decode` are the URL helpers the
+matcher itself uses. `WildcardPattern` exposes the pattern engine on its own.
+
+Three runnable examples live in [`examples/`](examples/). CI diffs their output against
+[`examples/expected/`](examples/expected/), so the blocks above cannot drift from what the code
+actually prints.
 
 ## JavaScript
 
@@ -169,18 +252,46 @@ try {
   for (const d of aasa.validate()) {
     console.log(`${d.severity} ${d.code} ${d.path}: ${d.message}`);
   }
-
   console.log(aasa.decide(appId, url));   // "match" | "exclude" | "no_match"
   console.log(aasa.explain(appId, url));  // the same decision, in words
-
-  // One boundary crossing for a whole batch: 0 no match, 1 match, 2 exclude, 3 bad URL.
-  const codes = aasa.decideLines(appId, urls.join("\n"));
 } finally {
   aasa.free();
 }
 ```
 
-Works in browsers, Node, and Bun. Details in [docs/wasm.md](docs/wasm.md).
+`Aasa` holds WebAssembly memory. Call `free()` when you are done with it — a `try`/`finally` is the
+honest way to do that.
+
+### Every method
+
+| Method | Answers |
+| --- | --- |
+| `Aasa.compile(bytes, domain, maxBytes?)` | a handle to reuse; `maxBytes` caps the payload |
+| `.domain` | the domain it was compiled for |
+| `validate()` | the diagnostics, as objects |
+| `hasErrors()` | whether any diagnostic is an error |
+| `decide(appId, url)` | `"match"` / `"exclude"` / `"no_match"` |
+| `decideMany(appId, urls[])` | one crossing for an array of URLs |
+| `decideManyCodes(appId, urls[])` | the same as bytes: 0 no match, 1 match, 2 exclude, 3 bad URL |
+| `decideLines(appId, newlineSeparated)` | the same again, without building a JS array |
+| `match(appId, url)` | decision plus trace, as an object |
+| `matchJson(appId, url)` | the same, as a JSON string |
+| `explain(appId, url)` | the trace as human-readable text |
+| `appsForUrl(url)` | every app the URL reaches |
+| `applinkApps()` | every app under `applinks` |
+| `servicesForApp(appId)` | which services one app is enrolled in |
+| `servicesForBundle(teamId, bundleId)` | the same, by team and bundle |
+| `appIdsForBundle(bundleId)` | every team shipping this bundle id |
+| `normalizedJson()` | the normal form used for comparison |
+| `semanticDiff(other)` | the changes between two documents |
+| `semanticEqual(other)` | whether they decide every URL alike |
+
+One-shot functions, when there is nothing to reuse: `validateAasa(bytes)`,
+`matchAasa(bytes, domain, appId, url)`, `diffAasa(left, right)`, `matchPattern(pattern, input,
+caseSensitive)`, `splitAppId(appId)`, `isoTableSource()`. `setPanicHook()` routes Rust panics to
+`console.error` while debugging.
+
+Works in browsers, Node, and Bun. Packaging details in [docs/wasm.md](docs/wasm.md).
 
 ## How this compares
 

@@ -1,0 +1,13 @@
+origin vs reformatted
+  equivalent:          true
+  structurally_equal:  false
+
+origin vs stale CDN copy
+  equivalent: false
+  RULE_CHANGED    ABCDE12345.com.example.app #0
+  before: / = /help/*, caseSensitive=false, percentEncoded=true
+  after:  / = /help/*, caseSensitive=true, percentEncoded=true
+
+https://example.com/HELP/1
+  origin: MATCH
+  stale:  NO_MATCH

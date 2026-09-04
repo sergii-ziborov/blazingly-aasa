@@ -28,6 +28,11 @@ jobs:
       - name: Workflow files parse and declare triggers
         if: matrix.os == 'ubuntu-latest'
         run: pip install --quiet pyyaml && python3 scripts/check_workflows.py
+      # The README quotes these outputs verbatim. If an example's output changes, the docs are
+      # wrong from that commit on, and nobody notices until a reader runs the code.
+      - name: Examples print what the README says they print
+        if: matrix.os == 'ubuntu-latest'
+        run: ./scripts/check_examples.sh
       - name: Documentation
         run: cargo doc --workspace --no-deps --all-features
         env:
