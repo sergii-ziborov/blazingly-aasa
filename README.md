@@ -230,7 +230,10 @@ CI on one specific finding. Every code is listed in [docs/diagnostics.md](docs/d
 **Free functions.** `validate(bytes)`, `match_url(bytes, domain, app_id, url)`, and
 `diff(left, right)` do the whole job in one call when you will not reuse the document.
 `split_app_id`, `trim_path`, `strip_leading_slash`, and `percent_decode` are the URL helpers the
-matcher itself uses. `WildcardPattern` exposes the pattern engine on its own.
+matcher itself uses. `WildcardPattern` exposes the glob engine on its own — note that it is *only*
+the glob engine: `WildcardPattern::compile("/buy/*", true)?.matches("/buy")` is `false`, while
+`decide` on the same pattern answers `Match`, because a rule's `/` component also matches the
+parent path. Reach for it to test a pattern, not to answer a question about a URL.
 
 Three runnable examples live in [`examples/`](examples/). CI diffs their output against
 [`examples/expected/`](examples/expected/), so the blocks above cannot drift from what the code
@@ -288,7 +291,9 @@ honest way to do that.
 
 One-shot functions, when there is nothing to reuse: `validateAasa(bytes)`,
 `matchAasa(bytes, domain, appId, url)`, `diffAasa(left, right)`, `matchPattern(pattern, input,
-caseSensitive)`, `splitAppId(appId)`, `isoTableSource()`. `setPanicHook()` routes Rust panics to
+caseSensitive)`, `splitAppId(appId)`, `isoTableSource()`. `matchPattern` is the glob engine alone —
+it answers `false` for `("/buy/*", "/buy")`, where `decide` answers `"match"` — so use it to test a
+pattern, not to decide a URL. `setPanicHook()` routes Rust panics to
 `console.error` while debugging.
 
 Works in browsers, Node, and Bun. Packaging details in [docs/wasm.md](docs/wasm.md).

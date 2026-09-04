@@ -376,6 +376,11 @@ pub fn diff_aasa(left: &[u8], right: &[u8]) -> Result<JsValue, JsError> {
 
 /// Checks a single Apple wildcard pattern against a string.
 ///
+/// This is the glob engine on its own, **not** AASA path matching: `matchPattern("/buy/*", "/buy")`
+/// is `false`, while `Aasa.decide` on a rule of `{"/": "/buy/*"}` answers `"match"` for
+/// `https://example.com/buy`, because Apple matches the parent path too. Use `decide` for a URL;
+/// use this only to test a pattern in isolation.
+///
 /// # Errors
 ///
 /// Throws when the pattern has an unterminated `$(` or an unknown variable.

@@ -47,6 +47,31 @@ impl std::error::Error for PatternSyntaxError {}
 /// assert!(!predefined.matches("/id/4x"));
 /// # Ok::<(), blazingly_aasa::PatternSyntaxError>(())
 /// ```
+///
+/// # This is the glob engine, not AASA path matching
+///
+/// It compares a pattern to a string and nothing else. The `/` component of a rule carries extra
+/// semantics that Apple's `swcutil` confirms and this type deliberately does not implement:
+/// a pattern ending in `/*` also matches its parent path, trailing slashes are insignificant, and
+/// a leading slash in the pattern is optional.
+///
+/// ```
+/// use blazingly_aasa::{CompiledAasa, MatchDecision, WildcardPattern};
+/// // The glob engine says no, because `/buy` is not `/buy/` followed by anything.
+/// assert!(!WildcardPattern::compile("/buy/*", true)?.matches("/buy"));
+///
+/// // Apple says yes, and so does the matcher.
+/// let doc = br#"{"applinks":{"details":[{"appIDs":["A.b"],"components":[{"/":"/buy/*"}]}]}}"#;
+/// let aasa = CompiledAasa::parse(doc).unwrap();
+/// assert_eq!(
+///     aasa.decide("example.com", "A.b", "https://example.com/buy").unwrap(),
+///     MatchDecision::Match,
+/// );
+/// # Ok::<(), blazingly_aasa::PatternSyntaxError>(())
+/// ```
+///
+/// Use [`CompiledAasa::decide`](crate::CompiledAasa::decide) to answer a question about a URL.
+/// Reach for this type only to test a pattern in isolation.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct WildcardPattern {
     inner: Pattern,

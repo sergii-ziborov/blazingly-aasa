@@ -3,6 +3,19 @@
 All notable changes to this project are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.5] - 2026-09-04
+
+Documentation. No code changed.
+
+- **`WildcardPattern` and `matchPattern` are the glob engine, not AASA path matching, and neither
+  said so.** `matchPattern("/buy/*", "/buy")` is `false`; `decide` on a rule of `{"/": "/buy/*"}`
+  answers `Match` for `https://example.com/buy`, because Apple matches the parent path too. Anyone
+  reaching for the pattern helper to check a path pattern got an answer contradicting this crate's
+  own headline finding, from an API that looked like the right one to call.
+
+  Both entry points now carry the warning, and the Rust one carries it as a doctest that asserts
+  the two layers disagree — so the distinction is executable rather than a claim in prose.
+
 ## [0.1.4] - 2026-09-04
 
 Measured numbers, corrected. No code changed.
