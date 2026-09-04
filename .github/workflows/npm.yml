@@ -1,4 +1,4 @@
-# Publishes @blazingly/aasa. Manual and tag-gated for the same reason the crates.io workflow is:
+# Publishes blazingly-aasa. Manual and tag-gated for the same reason the crates.io workflow is:
 # an npm version cannot be replaced once published.
 name: Publish npm
 

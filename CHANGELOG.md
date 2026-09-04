@@ -3,6 +3,37 @@
 All notable changes to this project are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-09-04
+
+A diagnostic that described the opposite of what Apple does, and documentation that can no longer
+drift. No matching behaviour changed; the 140-case corpus is unmoved.
+
+### Fixed
+
+- **`AASA150` pointed readers at the wrong conclusion.** The matcher was already right — a
+  non-string query predicate makes `swcutil` discard the whole `?` dictionary, so the rule matches
+  *more* URLs — but the help text still read "this predicate can never match". A reader following
+  it would treat a wide-open rule as a dead one. `ComponentReason::UnsupportedPredicate` carried
+  the same inversion: the trace set `matched: true` while `reason.is_match()` returned `false`, so
+  the two halves of the public API disagreed about the same component. Both are fixed and pinned by
+  a regression test that asserts the wording's *direction*, not just its presence.
+
+### Added
+
+- `examples/` — three runnable programs covering matching with its trace, validation, and comparing
+  two documents. `scripts/check_examples.sh` diffs their output against `examples/expected/`, and
+  CI runs it, so every output block quoted in the README is what the code prints on that commit.
+- `scripts/oracle_probe_gaps.sh` puts the two remaining guesses to `swcutil`: unknown keys inside a
+  component rule, and pattern keys inside `defaults`. Both are readings this crate chose because
+  Apple's reference does not say. The script carries its own controls.
+
+### Changed
+
+- The README lists every public method, in Rust and in JavaScript, with what it answers. The
+  WebAssembly surface had eight methods the README had never mentioned.
+- `docs/roadmap.md` quoted a 73-case corpus that now holds 140, a runner that has been replaced,
+  and a revision-pinned dependency that is now a published version.
+
 ## [0.1.2] - 2026-09-03
 
 Packaging and wording. No matching behaviour changed; the 140-case corpus is unmoved.
