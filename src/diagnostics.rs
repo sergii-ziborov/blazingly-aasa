@@ -109,7 +109,7 @@ diagnostic_codes! {
     DocumentTooLarge => ("AASA170", Error, "payload exceeds the configured size limit"),
     EmptyComponentRule => ("AASA180", Warning, "component rule constrains nothing and matches every URL"),
     UnreachableRule => ("AASA190", Warning, "rule is unreachable because an earlier rule always matches"),
-    DefaultsContainsPatternKeys => ("AASA192", Info, "defaults object carries pattern keys with undocumented behavior"),
+    DefaultsContainsPatternKeys => ("AASA192", Warning, "defaults object carries pattern keys this crate does not yet apply"),
     NoDetails => ("AASA193", Warning, "applinks declares no details, so no app can open this domain"),
     EmptyPatternAlternative => ("AASA194", Warning, "substitution value is empty"),
     SignedPayload => ("AASA200", Warning, "the file is CMS-signed; the signature was not verified"),

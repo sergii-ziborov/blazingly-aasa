@@ -1,0 +1,16 @@
+unknown-key	control-plain	{"/":"/foo/*"}	https://example.com/foo/1	0	Matched by pattern at index 0: {| "/" : "/foo/*"|}
+unknown-key	unknown-alongside-path	{"/":"/foo/*","totallyUnknownKey":"x"}	https://example.com/foo/1	0	Matched by pattern at index 0: {| "/" : "/foo/*",| "totallyUnknownKey" : "x"|}
+unknown-key	unknown-nonmatching	{"/":"/foo/*","totallyUnknownKey":"x"}	https://example.com/bar	0	Did not match.
+unknown-key	unknown-alone	{"totallyUnknownKey":"x"}	https://example.com/anything	0	Matched by pattern at index 0: {| "totallyUnknownKey" : "x"|}
+unknown-key	control-empty	{}	https://example.com/anything	0	Matched by pattern at index 0: {||}
+unknown-key	misspelled-known	{"/":"/foo/*","casesensitive":true}	https://example.com/FOO/1	0	Did not match.
+unknown-key	nested-unknown-object	{"/":"/foo/*","future":{"a":"b"}}	https://example.com/foo/1	0	Matched by pattern at index 0: {| "/" : "/foo/*",| "future" : {| "a" : "b"| }|}
+defaults	control-no-defaults	{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],"components":[{"#":"*"}]}]}}	https://example.com/bar	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/bar" matched.
+defaults	applinks-path	{"applinks":{"defaults":{"/":"/foo/*"},"details":[{"appIDs":["ABCDE12345.com.example.app"],"components":[{"#":"*"}]}]}}	https://example.com/bar	0	Input JSON did not match input URL.
+defaults	applinks-path-agreeing	{"applinks":{"defaults":{"/":"/foo/*"},"details":[{"appIDs":["ABCDE12345.com.example.app"],"components":[{"#":"*"}]}]}}	https://example.com/foo/1	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/foo/1" matched.
+defaults	detail-path	{"applinks":{"details":[{"appIDs":["ABCDE12345.com.example.app"],"defaults":{"/":"/foo/*"},"components":[{"#":"*"}]}]}}	https://example.com/bar	0	Input JSON did not match input URL.
+defaults	applinks-exclude	{"applinks":{"defaults":{"exclude":true},"details":[{"appIDs":["ABCDE12345.com.example.app"],"components":[{"#":"*"}]}]}}	https://example.com/bar	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/bar" blocked match.
+defaults	applinks-query	{"applinks":{"defaults":{"?":{"id":"??"}},"details":[{"appIDs":["ABCDE12345.com.example.app"],"components":[{"#":"*"}]}]}}	https://example.com/bar?id=7	0	Input JSON did not match input URL.
+defaults	applinks-query-violating	{"applinks":{"defaults":{"?":{"id":"??"}},"details":[{"appIDs":["ABCDE12345.com.example.app"],"components":[{"#":"*"}]}]}}	https://example.com/bar?id=7777	0	Input JSON did not match input URL.
+defaults	applinks-casesensitive-true	{"applinks":{"defaults":{"caseSensitive":true},"details":[{"appIDs":["ABCDE12345.com.example.app"],"components":[{"/":"/foo"}]}]}}	https://example.com/FOO	0	Input JSON did not match input URL.
+defaults	applinks-casesensitive-false	{"applinks":{"defaults":{"caseSensitive":false},"details":[{"appIDs":["ABCDE12345.com.example.app"],"components":[{"/":"/foo"}]}]}}	https://example.com/FOO	0	{ s = applinks, a = ABCDE12345.com.example.app, d = example.com }: Pattern "https://example.com/FOO" matched.

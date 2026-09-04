@@ -161,3 +161,41 @@ Network fetching, `.well-known` lookup, Apple CDN behaviour, HTTP redirects and 
 `.app` inspection, Mach-O parsing, code signature verification, entitlement extraction, device
 state, and the App Store Connect API. Those belong to
 [`blazingly-aasa-mcp`](https://github.com/sergii-ziborov/blazingly-aasa-mcp) and to tools like it.
+
+## A known gap, found by the oracle and not yet closed
+
+Apple calls `applinks.defaults` "a subclass of `components`" and lists only `caseSensitive` and
+`percentEncoded` under it. This crate read that literally: it applies those two and reports
+`AASA192` for anything else. The probes in `conformance/oracle/swcutil-gap-probes.tsv`, run on
+2026-09-04, show that reading is wrong.
+
+| document | URL | `swcutil` | this crate |
+| --- | --- | --- | --- |
+| `defaults: {"/": "/foo/*"}`, rule `{"#": "*"}` | `/bar` | did not match | **MATCH** |
+| the same | `/foo/1` | matched | MATCH |
+| the same `/` at detail level | `/bar` | did not match | **MATCH** |
+| `defaults: {"exclude": true}`, rule `{"#": "*"}` | `/bar` | **blocked** | **MATCH** |
+
+The control holds: `caseSensitive: true` and `caseSensitive: false` in `defaults` produce opposite
+answers on `/FOO`, so `defaults` is read, and the pattern keys in it are applied rather than
+ignored.
+
+This is the dangerous direction — the crate says a URL opens the app where Apple says it does not,
+and misses an `exclude` entirely. It is confined to documents that put `/`, `?`, `#`, or `exclude`
+inside `defaults`, which is rare and which `AASA192` now warns about as a *warning* naming the
+divergence rather than an *info* calling the behaviour undocumented.
+
+Closing it means `defaults` carrying a full component shape and merging into each rule, which is a
+matching change rather than a documentation one, so it is tracked in `docs/roadmap.md` rather than
+patched in place.
+
+## What the oracle settled about unknown keys
+
+The same run answered the other open question: Apple **ignores** unknown keys inside a component
+rule. `{"/": "/foo/*", "totallyUnknownKey": "x"}` matches exactly where `{"/": "/foo/*"}` does,
+`{"totallyUnknownKey": "x"}` alone matches everything just as `{}` does, and a nested object under
+an unknown key changes nothing. A misspelled known key is ignored too: `casesensitive` (lowercase
+`s`) does not turn off case sensitivity.
+
+This crate's `_ => {}` for unrecognised component keys is therefore oracle-backed rather than a
+guess, and there is no forward-compatibility hazard in it.

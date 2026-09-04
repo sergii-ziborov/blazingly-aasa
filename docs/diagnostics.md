@@ -76,7 +76,7 @@ pattern must not accidentally open a domain.
 | `AASA150` | error | a query predicate is not a string pattern |
 | `AASA180` | warning | a rule constrains nothing and matches every URL |
 | `AASA190` | warning | a rule is unreachable because an earlier rule always matches |
-| `AASA192` | info | a `defaults` object carries pattern keys with undocumented behaviour |
+| `AASA192` | warning | a `defaults` object carries pattern keys this crate does not yet apply |
 
 `AASA191` was removed before the first release. It warned that a path pattern without a leading
 slash could never match, which Apple's `swcutil` disproves — a pattern of `abc` matches `/abc`.

@@ -467,9 +467,11 @@ impl Walker {
                     format!("`defaults` also carries {keys}"),
                 )
                 .with_help(
-                    "Apple documents `defaults` as a subclass of `components`, but does not \
-                     specify what a pattern key means there; this crate applies only \
-                     caseSensitive and percentEncoded",
+                    "swcutil applies these: a `/` in defaults narrows every rule under it, and \
+                     `exclude: true` there blocks. This crate applies only caseSensitive and \
+                     percentEncoded, so for this document it can answer MATCH where Apple answers \
+                     no match. Move the pattern keys into the component rules until that gap \
+                     closes. See docs/parity.md.",
                 ),
             );
         }
