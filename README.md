@@ -418,8 +418,8 @@ the JSON parser:
 
 | | vs `serde_json` + `regex` |
 | --- | --- |
-| 8 URLs against 8 apps x 16 rules | 1.7x slower |
-| a miss scanned across 1 / 8 / 32 app entries | 1.9x / 2.0x / 1.7x slower |
+| 8 URLs against 8 apps x 16 rules | 2.4x slower |
+| a miss scanned across 1 / 8 / 32 app entries | 2.1x / 1.9x / 1.6x slower |
 
 Before this crate was checked against Apple's `swcutil` it was at parity here — 0.99x, 1.00x, 1.00x
 on those same rows. It got slower by getting correct. `swcutil` settled four behaviours the
@@ -437,12 +437,14 @@ measuring less work, not better work.
 
 Two things did come back from the first, naive version of those rules: trimming the path once per
 match instead of once per rule, and deciding at compile time that a `/`-rooted pattern can never
-match a path without one. That took the regression from 5.9x down to under 2x.
+match a path without one. That took the regression from 5.9x down to the rows above — the cost
+settles around 2x, and the more app entries a miss has to scan, the smaller it gets, because the
+per-rule work the baseline skips is not what dominates at that point.
 
 | | |
 | --- | --- |
-| `compiled.decide(...)` vs reparsing per call | **916x faster** |
-| `decide` vs `match_url` with a full trace | trace costs ~11x |
+| `compiled.decide(...)` vs reparsing per call | **924x faster** |
+| `decide` vs `match_url` with a full trace | trace costs ~7x |
 
 Parse once, match many. The trace is why `decide` and `match_url` are separate calls rather than one
 function with a flag.

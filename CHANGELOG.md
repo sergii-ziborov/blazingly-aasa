@@ -3,6 +3,19 @@
 All notable changes to this project are documented here. This project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.4] - 2026-09-04
+
+Measured numbers, corrected. No code changed.
+
+- The "matching a real document" table overstated this crate against its baseline: it claimed 1.7x
+  slower on the batch row where two clean runs today both measure about 2.4x, and 1.9x / 2.0x /
+  1.7x on the scaling rows that measure 2.1x / 1.9x / 1.6x. The trace overhead is ~7x, not ~11x,
+  and reuse beats reparsing by 924x rather than 916x.
+
+  The direction of the error is the reason this is worth a release: every correction here makes the
+  crate look worse than the published README claimed, and a benchmark table that drifts favourably
+  is the one nobody checks.
+
 ## [0.1.3] - 2026-09-04
 
 A diagnostic that described the opposite of what Apple does, and documentation that can no longer
