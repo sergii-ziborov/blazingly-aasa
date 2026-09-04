@@ -21,6 +21,9 @@ jobs:
         with:
           components: clippy, rustfmt
       - uses: Swatinem/rust-cache@v2
+      # Cargo.lock carries the workspace version. A bump committed without it makes `cargo
+      # package` fail at the end of the run; --locked fails here instead, with the reason named.
+      - run: cargo check --workspace --locked
       - run: cargo fmt --all --check
       - run: cargo test --workspace
       - run: cargo clippy --workspace --all-targets --all-features -- -D warnings
