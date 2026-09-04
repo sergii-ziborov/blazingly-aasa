@@ -414,8 +414,10 @@ impl Walker {
                                     ),
                                 )
                                 .with_help(
-                                    "this predicate can never match; use a string pattern such as \
-                                     \"*\" to accept any value",
+                                    "Apple ignores the entire query dictionary when any predicate \
+                                     is not a string, so every query constraint in this rule stops \
+                                     applying and the rule matches more URLs, not fewer. Replace \
+                                     every predicate with a string pattern.",
                                 ),
                             );
                             QueryPredicate::Unsupported {

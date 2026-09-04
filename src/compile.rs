@@ -62,7 +62,8 @@ impl std::fmt::Display for Service {
 pub enum EffectiveQuery {
     /// One pattern matched against the whole query string.
     Whole(String),
-    /// Named predicates, all of which must hold. `None` marks a predicate that can never match.
+    /// Named predicates, all of which must hold. `None` marks a predicate Apple ignores, which
+    /// makes the whole dictionary inert.
     Items(BTreeMap<String, Option<String>>),
 }
 

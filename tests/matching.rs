@@ -338,6 +338,46 @@ fn a_non_string_predicate_discards_the_whole_query_dictionary() {
     assert!(aasa
         .validate()
         .contains(blazingly_aasa::DiagnosticCode::UnsupportedQueryPredicate));
+
+    // The human-facing explanation has to describe *widening*. An earlier release said the
+    // predicate "can never match", which is the opposite of what swcutil does, and no test
+    // caught it because the matcher was already right. This pins the wording's direction.
+    let help = aasa
+        .validate()
+        .diagnostics()
+        .iter()
+        .find(|d| d.code == blazingly_aasa::DiagnosticCode::UnsupportedQueryPredicate)
+        .and_then(|d| d.help.clone())
+        .expect("AASA150 carries help");
+    assert!(
+        !help.contains("never match"),
+        "help must not claim the predicate cannot match: {help}"
+    );
+    assert!(
+        help.contains("ignores the entire query dictionary"),
+        "help must say the whole dictionary is discarded: {help}"
+    );
+
+    // The trace marks the component as matched, so its reason must agree.
+    let trace = aasa
+        .match_url("example.com", APP, "https://example.com/x?a=2")
+        .expect("url parses");
+    let reasons: Vec<_> = trace
+        .trace
+        .details
+        .iter()
+        .flat_map(|d| d.rules.iter())
+        .flat_map(|r| r.components.iter())
+        .filter(|c| c.reason == blazingly_aasa::ComponentReason::UnsupportedPredicate)
+        .collect();
+    assert!(!reasons.is_empty(), "the ignored dictionary is traced");
+    for component in reasons {
+        assert_eq!(
+            component.matched,
+            component.reason.is_match(),
+            "matched and reason.is_match() must not disagree"
+        );
+    }
 }
 
 /// A trailing slash is insignificant at both ends, and a leading slash is optional in the pattern.

@@ -74,7 +74,8 @@ pub enum ComponentReason {
     CaseMismatch,
     /// A `?` dictionary named a query item the URL does not carry.
     MissingQueryItem,
-    /// A `?` predicate was not a string, so it can never match.
+    /// A `?` predicate was not a string, so Apple ignored the whole `?` dictionary and the
+    /// component constrained nothing.
     UnsupportedPredicate,
 }
 
@@ -84,7 +85,11 @@ impl ComponentReason {
     pub fn is_match(self) -> bool {
         matches!(
             self,
-            Self::Unconstrained | Self::Exact | Self::Wildcard | Self::Substitution
+            Self::Unconstrained
+                | Self::Exact
+                | Self::Wildcard
+                | Self::Substitution
+                | Self::UnsupportedPredicate
         )
     }
 }
@@ -99,7 +104,9 @@ impl fmt::Display for ComponentReason {
             Self::PatternMismatch => "pattern did not match",
             Self::CaseMismatch => "differs only by letter case",
             Self::MissingQueryItem => "query item is missing",
-            Self::UnsupportedPredicate => "predicate is not a string pattern",
+            Self::UnsupportedPredicate => {
+                "predicate is not a string, so the whole query dictionary is ignored"
+            }
         })
     }
 }
