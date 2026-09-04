@@ -42,13 +42,14 @@ match. A JavaScript port would win on bundle size only.
 1. **WebAssembly stays the only engine.** If bundle size becomes a real complaint, the fix is to
    shrink the module — the JSON engine and `serde-wasm-bindgen` dominate it, and neither has been
    optimised for size yet — not to fork the semantics.
-2. **`conformance/cases.json` is published** so the question is no longer dangerous. 73 matching
-   and 14 validation cases, each tagged with the feature it covers and whether Apple documents the
-   behaviour or this crate decided it. Both the Rust suite and the WebAssembly suite run it, and
-   `conformance/run-third-party.mjs` points it at anyone else's implementation.
+2. **`conformance/cases.json` is published** so the question is no longer dangerous. 140 matching
+   and 13 validation cases, each tagged with the feature it covers and whether Apple documents the
+   behaviour, this crate decided it, or `swcutil` confirmed it. Both the Rust suite and the
+   WebAssembly suite run it, and `conformance/run.mjs --exec` points it at any implementation in
+   any language over the line protocol in `conformance/PROTOCOL.md`.
 3. If a pure-JavaScript build is ever genuinely needed, it is now a tractable project rather than a
-   liability: it has to pass 87 cases in CI, and drift becomes a failing test instead of a support
-   ticket.
+   liability: it has to pass 153 cases in CI, and drift becomes a failing test instead of a
+   support ticket.
 
 ### Same repository, or separate?
 
@@ -138,11 +139,13 @@ Two things it does that this crate could not have:
   following it would hide the misconfiguration the tool exists to find. That is a *transport*
   opinion, and it belongs where the transport is.
 - The caller names a domain, never a URL, and IP literals, `localhost`, `.local`, and unqualified
-  names are refused before a socket opens. A semantics crate has no business having a view on
-  that, and a networked tool has no business not having one.
+  names are refused before a socket opens. The string check alone turned out to be insufficient —
+  a public name can still resolve inward — so the resolver itself now rejects every address
+  outside public unicast space, and the agent takes no proxy. A semantics crate has no business
+  having a view on that, and a networked tool has no business not having one.
 
-The boundary held. `blazingly-aasa` gained nothing network-shaped: the MCP crate depends on it,
-pinned to a revision, and the arrow has stayed one-directional. Both statements in "Two things it
+The boundary held. `blazingly-aasa` gained nothing network-shaped: the MCP crate depends on the
+published crate by version, and the arrow has stayed one-directional. Both statements in "Two things it
 must not do" above are still true of the built thing — it reports what the served file permits, and
 its fetch logic did not leak downward.
 
